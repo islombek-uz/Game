@@ -1,0 +1,3228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#070b19">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>CardVerse — Настольные Игры</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        // UNO Light
+                        unoRed: '#ef4444',
+                        unoBlue: '#3b82f6',
+                        unoGreen: '#22c55e',
+                        unoYellow: '#eab308',
+                        // UNO Dark Side (Flip)
+                        flipPink: '#ec4899',
+                        flipTeal: '#14b8a6',
+                        flipOrange: '#f97316',
+                        flipPurple: '#a855f7'
+                    },
+                    boxShadow: {
+                        'glow-red': '0 0 20px rgba(239, 68, 68, 0.6)',
+                        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.6)',
+                        'glow-gold': '0 0 20px rgba(234, 179, 8, 0.6)',
+                        'glow-purple': '0 0 20px rgba(168, 85, 247, 0.6)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #070b19;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.16) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.14) 0%, transparent 45%),
+                radial-gradient(circle at center, #131b3a 0%, #060914 100%);
+        }
+
+        /* Glassmorphism & Elevated Surfaces */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Felt Casino / Board Game Table Surface */
+        .game-table-felt {
+            background: 
+                radial-gradient(ellipse at center, rgba(30, 41, 82, 0.85) 0%, rgba(11, 17, 36, 0.96) 75%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 6px);
+            box-shadow: 
+                inset 0 0 80px rgba(0, 0, 0, 0.85),
+                inset 0 1px 1px rgba(255, 255, 255, 0.12),
+                0 25px 60px -15px rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(99, 102, 241, 0.22);
+        }
+
+        .game-table-felt.durak-felt {
+            background: 
+                radial-gradient(ellipse at center, rgba(16, 78, 59, 0.78) 0%, rgba(6, 32, 26, 0.96) 78%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 2px, transparent 2px, transparent 6px);
+            border-color: rgba(245, 158, 11, 0.32);
+        }
+
+        /* Card styles & hover animations */
+        .game-card {
+            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.95));
+            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 24px 45px -12px rgba(99, 102, 241, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+        .game-card .mini-fan-1 {
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .game-card .mini-fan-2 {
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .game-card:hover .mini-fan-1 {
+            transform: rotate(-16deg) translate(-4px, -3px);
+        }
+        .game-card:hover .mini-fan-2 {
+            transform: rotate(12deg) translate(6px, -4px);
+        }
+
+        .playing-card {
+            transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, filter 0.22s ease;
+            transform-origin: center bottom;
+            will-change: transform;
+        }
+        @media (hover: hover) {
+            .playing-card.playable:hover {
+                transform: translateY(-24px) scale(1.12) rotate(0deg) !important;
+                z-index: 40;
+                cursor: pointer;
+                box-shadow: 0 20px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(251, 191, 36, 0.65);
+            }
+        }
+
+        /* Glossy Card Sheen Overlay */
+        .card-gloss::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(125deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 38%, transparent 55%);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        /* Physical UNO Tilted Oval */
+        .uno-oval-white {
+            transform: rotate(-28deg);
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.22), 0 5px 12px rgba(0,0,0,0.55);
+            border-radius: 50%;
+        }
+
+        .uno-oval-dark {
+            transform: rotate(-28deg);
+            background: linear-gradient(135deg, #1e293b 0%, #090d16 100%);
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.75), 0 5px 14px rgba(0,0,0,0.85);
+            border-radius: 50%;
+        }
+
+        /* Text Stroke Effect for Numbers */
+        .uno-number-stroke {
+            text-shadow: 
+                -2px -2px 0 #000,  
+                 2px -2px 0 #000,
+                -2px  2px 0 #000,
+                 2px  2px 0 #000,
+                 0 6px 10px rgba(0,0,0,0.65);
+        }
+
+        .uno-corner-stroke {
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Dark Flip Mode Dynamic Theme Overlay */
+        body.dark-flip-mode {
+            background-color: #090314 !important;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(236, 0, 140, 0.22) 0%, transparent 45%),
+                radial-gradient(circle at 80% 80%, rgba(0, 181, 173, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at center, #2d0d3d 0%, #070210 100%) !important;
+        }
+        body.dark-flip-mode .game-table-felt {
+            background: 
+                radial-gradient(ellipse at center, rgba(67, 16, 92, 0.85) 0%, rgba(14, 4, 24, 0.96) 78%),
+                repeating-linear-gradient(45deg, rgba(236,0,140,0.03) 0px, rgba(236,0,140,0.03) 2px, transparent 2px, transparent 6px);
+            border-color: rgba(236, 0, 140, 0.45);
+        }
+
+        /* Pulse Animations */
+        @keyframes activeTurnPulse {
+            0%, 100% { box-shadow: 0 0 12px rgba(251, 191, 36, 0.35), inset 0 0 8px rgba(251, 191, 36, 0.15); }
+            50% { box-shadow: 0 0 28px rgba(251, 191, 36, 0.85), inset 0 0 14px rgba(251, 191, 36, 0.3); }
+        }
+        .turn-active {
+            animation: activeTurnPulse 1.6s infinite;
+        }
+
+        @keyframes slowSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: slowSpin 14s linear infinite;
+        }
+
+        /* Premium Lobby Polish */
+        #lobbyScreen > div:first-child { animation: lobbyHeroIn .8s cubic-bezier(.22,1,.36,1) both; }
+        #lobbyScreen > div:first-child h2 { letter-spacing: -.04em; text-shadow: 0 12px 35px rgba(99,102,241,.25); }
+        #lobbyAuthBanner { position: relative; overflow: hidden; background: linear-gradient(135deg,rgba(30,41,59,.86),rgba(15,23,42,.72)); box-shadow: 0 18px 50px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08); }
+        .game-card { min-height: 310px; isolation: isolate; background: linear-gradient(145deg,rgba(30,41,59,.82),rgba(12,18,35,.94)); backdrop-filter: blur(12px); border-color: rgba(148,163,184,.16); box-shadow: 0 22px 55px -28px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.08); animation: cardRise .75s cubic-bezier(.22,1,.36,1) both; }
+        .game-card:nth-child(1){animation-delay:.18s}.game-card:nth-child(2){animation-delay:.26s}.game-card:nth-child(3){animation-delay:.34s}.game-card:nth-child(4){animation-delay:.42s}
+        .game-card:hover { border-color: rgba(165,180,252,.55); filter: saturate(1.08); }
+        button,[onclick]{-webkit-tap-highlight-color:transparent}button:active{transform:scale(.97)}
+        @keyframes lobbyHeroIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes cardRise{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @media(max-width:1024px){#lobbyScreen{padding-top:1.25rem}.game-card{min-height:280px}}
+        @media(max-width:640px){header{padding-left:.75rem;padding-right:.75rem}#lobbyScreen{gap:1.5rem}#lobbyScreen>div:first-child h2{font-size:2.15rem;line-height:1.08}#lobbyAuthBanner{text-align:center}#lobbyAuthBanner>div:first-child{flex-direction:column}.game-card{min-height:260px}#gameStatusToast{order:3;width:100%;justify-content:center}}
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+        /* ================= MOBILE / TOUCH LAYOUT ================= */
+        @media (max-width: 640px) {
+            html { -webkit-text-size-adjust: 100%; }
+            body {
+                touch-action: manipulation;
+                overscroll-behavior-y: none;
+                -webkit-touch-callout: none;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+
+            header {
+                padding: calc(.45rem + env(safe-area-inset-top)) .6rem .45rem !important;
+                gap: .4rem;
+            }
+            header h1 { font-size: 1rem !important; letter-spacing: .02em; }
+            header p { display: none !important; }
+            header .w-10 { width: 2rem !important; height: 2rem !important; font-size: .9rem !important; }
+            header button { padding: .5rem .55rem !important; }
+            #headerRegisterBtn span { display: none; }
+            #userProfilePill { padding: .3rem .45rem !important; }
+
+            main { padding: .4rem !important; }
+
+            /* --- Game top bar --- */
+            #gameScreen { gap: .35rem !important; }
+            #gameScreen > div:first-child { padding: .4rem .55rem !important; row-gap: .3rem !important; }
+            #currentGameBadge { font-size: .65rem !important; }
+            #matchSettingsBadge { font-size: .6rem !important; margin-left: 0 !important; display: block; }
+            #gameStatusToast {
+                order: 3; width: 100%; justify-content: center;
+                font-size: .65rem !important; padding: .3rem .6rem !important;
+            }
+            #gameStatusToast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+            /* --- Opponents --- */
+            #opponentsArea { min-height: 66px !important; gap: .2rem !important; padding: .2rem !important; }
+            #opponentsArea > div { padding: .25rem .4rem !important; }
+            #opponentsArea .w-7 { width: 20px !important; height: 30px !important; }
+            #opponentsArea .text-xs { font-size: .6rem !important; }
+
+            /* --- Table arena --- */
+            #tableArena { min-height: 0 !important; padding: .45rem !important; border-radius: 1rem !important; }
+            #tableCenterOverlay { top: .35rem; left: .4rem; right: .4rem; row-gap: .3rem; }
+            #tableCenterOverlay .bg-slate-950\/80 { font-size: .6rem !important; padding: .15rem .45rem !important; }
+            #penaltyBadge, #flipSideBadge { font-size: .6rem !important; padding: .15rem .45rem !important; }
+
+            #unoCenterTable { gap: 1.4rem !important; padding-top: 1.5rem !important; }
+            #unoDrawDeckStack, #discardPileCard { width: 60px !important; height: 84px !important; }
+            #unoCenterTable .absolute { width: 60px !important; height: 84px !important; }
+            #unoCenterTable span { font-size: .55rem !important; margin-top: .35rem !important; }
+            #discardPileCard .w-14 { width: 44px !important; height: 62px !important; }
+            #discardPileCard .text-2xl { font-size: 1.2rem !important; }
+            #discardPileCard .text-xs { font-size: 9px !important; }
+
+            /* --- Durak table --- */
+            #durakCenterTable { min-height: 180px !important; }
+            #durakPairsContainer { gap: .3rem !important; padding: 0 .2rem 0 3rem !important; max-width: 100% !important; }
+            #durakPairsContainer .w-14 { width: 38px !important; height: 56px !important; }
+            #durakTrumpCardSlot, #durakDeckStack { width: 42px !important; height: 60px !important; }
+            #durakTrumpCardSlot { margin-right: -1.6rem !important; }
+            #durakDeckCount { font-size: .6rem !important; padding: 0 .3rem !important; margin-left: .25rem !important; }
+            #durakPairsContainer .text-2xl, #durakTrumpCardSlot .text-2xl, #durakDeckStack .text-2xl { font-size: 1rem !important; }
+            #durakPairsContainer .text-xs, #durakTrumpCardSlot .text-xs, #durakDeckStack .text-xs { font-size: 8.5px !important; }
+
+            /* --- Hand --- */
+            #playerHand {
+                justify-content: flex-start !important;
+                min-height: 92px !important;
+                padding: .6rem .25rem .25rem !important;
+                -webkit-overflow-scrolling: touch;
+            }
+            #playerHand .playing-card { width: 56px !important; height: 80px !important; }
+            #playerHand .playing-card + .playing-card { margin-left: -12px; }
+            #playerHand .playing-card .w-14 { width: 38px !important; height: 56px !important; }
+            #playerHand .playing-card .text-2xl { font-size: 1.05rem !important; }
+            #playerHand .playing-card .text-xs { font-size: 8.5px !important; }
+
+            /* --- Action buttons --- */
+            #btnUnoShout { padding: .5rem .9rem !important; font-size: .7rem !important; }
+            #btnDurakTake, #btnDurakDone { padding: .55rem 1rem !important; font-size: .65rem !important; }
+
+            /* --- Modals --- */
+            .max-h-\[92vh\] { max-height: 88vh !important; }
+            #authModal > div, #profileModal > div, #gameOverModal > div { padding: 1.1rem !important; border-radius: 1.25rem !important; }
+
+            /* --- Lobby --- */
+            .game-card { min-height: 0 !important; }
+            #lobbyScreen { gap: 1.25rem !important; }
+        }
+
+        /* Touch devices: no sticky hover lift */
+        @media (hover: none) {
+            .game-card:hover { transform: none; }
+            .game-card:hover .mini-fan-1 { transform: rotate(-10deg); }
+            .game-card:hover .mini-fan-2 { transform: rotate(6deg); }
+        }
+
+        /* Landscape phones: save vertical space */
+        @media (max-height: 520px) and (orientation: landscape) {
+            #opponentsArea { min-height: 48px !important; padding: 0 !important; }
+            #opponentsArea .w-7 { width: 16px !important; height: 24px !important; }
+            #tableArena { min-height: 0 !important; }
+            #playerHand { min-height: 76px !important; }
+            #playerHand .playing-card { width: 48px !important; height: 68px !important; }
+            #playerHand .playing-card .w-14 { width: 32px !important; height: 48px !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 font-sans flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top App Navigation Header -->
+    <header class="w-full bg-slate-950/75 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3 sticky top-0 z-40 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3 cursor-pointer group" onclick="goToLobby()">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-pink-300">
+                    CardVerse
+                </h1>
+                <p class="text-[10px] text-indigo-300/70 font-semibold tracking-widest uppercase">Премиум Карточный Клуб</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-2.5">
+            <!-- Search Player Profile Button -->
+            <button onclick="openProfileModal()" class="px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-indigo-300 hover:text-white text-xs font-bold transition border border-indigo-500/30 flex items-center gap-1.5" title="Профиль и поиск игроков">
+                <i class="fa-solid fa-magnifying-glass text-indigo-400"></i>
+                <span class="hidden md:inline">Профиль / Поиск</span>
+            </button>
+
+            <!-- Player Profile & ID Badge -->
+            <div id="userProfilePill" onclick="openProfileModal()" class="hidden cursor-pointer px-3 py-1.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900/90 border border-indigo-400/40 flex items-center gap-2 transition shadow-inner group" title="Открыть мой профиль и статистику">
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 text-xs font-black">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="flex flex-col text-left leading-tight">
+                    <span id="headerPlayerName" class="text-[11px] font-extrabold text-white">Игрок</span>
+                    <span class="text-[10px] font-mono text-indigo-300 flex items-center gap-1">
+                        ID: <strong id="headerPlayerId" class="text-amber-300">---</strong>
+                    </span>
+                </div>
+            </div>
+
+            <button id="headerRegisterBtn" onclick="openAuthModal('login')" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-xs font-extrabold transition shadow-lg shadow-indigo-500/25 flex items-center gap-1.5">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Войти / Регистрация</span>
+            </button>
+
+            <button id="soundToggleBtn" onclick="toggleSound()" class="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10 shadow-inner" title="Звуковой эффект">
+                <i id="soundIcon" class="fa-solid fa-volume-high text-indigo-400"></i>
+            </button>
+            <button onclick="openRulesModal()" class="px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 text-xs font-bold transition border border-white/10 flex items-center gap-2 shadow-inner">
+                <i class="fa-solid fa-book-open text-amber-400"></i>
+                <span class="hidden sm:inline">Правила</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Copy Toast Notification -->
+    <div id="copyToast" class="hidden fixed top-20 right-4 z-50 bg-emerald-950/95 border border-emerald-400/60 text-emerald-200 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-2">
+        <i class="fa-solid fa-check-circle text-emerald-400"></i>
+        <span id="copyToastText">ID скопирован в буфер обмена!</span>
+    </div>
+
+    <!-- Main Container View switcher -->
+    <main class="flex-grow flex flex-col items-center justify-center p-3 sm:p-6 w-full max-w-7xl mx-auto">
+
+        <!-- ================= LOBBY SCREEN ================= -->
+        <section id="lobbyScreen" class="w-full flex flex-col items-center py-4 space-y-8">
+            <div class="text-center space-y-3 max-w-2xl">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1 text-xs font-bold uppercase tracking-widest text-indigo-300 bg-indigo-950/70 rounded-full border border-indigo-500/30 shadow-inner">
+                    <i class="fa-solid fa-sparkles text-amber-400 text-[10px]"></i> Коллекция настольных хитов
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-md">
+                    Выбери свою <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">карточную битву</span>
+                </h2>
+                <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+                    Играй против ИИ или зарегистрируйся, получи свой уникальный <b>ID</b> и сразись с другом по сети!
+                </p>
+            </div>
+
+            <!-- Player Registration / Multiplayer Quick Banner -->
+            <div id="lobbyAuthBanner" class="w-full max-w-3xl glass-panel rounded-2xl p-4 border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3 text-center sm:text-left">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 text-xl shrink-0">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 id="bannerTitle" class="text-sm font-black text-white">Войди в аккаунт или получи игровой ID</h3>
+                        <p id="bannerSubtitle" class="text-xs text-slate-400">Авторизуйся, чтобы сохранять статистику побед и приглашать друзей по ID.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="bannerLoginBtn" onclick="openAuthModal('login')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-400/40 font-extrabold text-xs transition">
+                        Войти
+                    </button>
+                    <button id="bannerRegBtn" onclick="openAuthModal('register')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg transition">
+                        Создать ID
+                    </button>
+                    <button id="bannerProfileBtn" onclick="openProfileModal()" class="hidden px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-simple"></i> Мой профиль
+                    </button>
+                    <button id="bannerCopyBtn" onclick="copyMyPlayerId()" class="hidden px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/40 font-extrabold text-xs transition flex items-center gap-1.5">
+                        <i class="fa-regular fa-copy"></i> Копировать ID
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full px-2">
+
+                <!-- UNO Classic -->
+                <div onclick="selectGame('uno')" class="game-card group cursor-pointer rounded-3xl p-5 border border-slate-700/80 hover:border-blue-400 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-36 h-36 bg-blue-500/15 rounded-full blur-2xl group-hover:bg-blue-500/30 transition"></div>
+                    <div class="flex justify-between items-start relative h-20">
+                        <div class="relative w-20 h-20">
+                            <div class="mini-fan-1 absolute top-1 left-0 w-12 h-16 rounded-lg bg-white p-0.5 border border-slate-300 shadow-lg rotate-[-10deg]">
+                                <div class="w-full h-full bg-[#0072BC] rounded flex items-center justify-center">
+                                    <div class="w-9 h-6 uno-oval-white flex items-center justify-center">
+                                        <span class="text-white font-black text-[10px] uno-number-stroke">+2</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mini-fan-2 absolute top-1 left-5 w-12 h-16 rounded-lg bg-white p-0.5 border border-slate-300 shadow-xl rotate-[6deg]">
+                                <div class="w-full h-full bg-[#ED1C24] rounded flex items-center justify-center">
+                                    <div class="w-9 h-6 uno-oval-white flex items-center justify-center">
+                                        <span class="text-white font-black text-xs uno-number-stroke">7</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[11px] font-extrabold px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 shadow-sm">
+                            Классика
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white group-hover:text-blue-300 transition">UNO Classic</h3>
+                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                            Оригинальный стиль Mattel: глянцевые белые рамки, фирменный наклонный овал и классические спецкарты.
+                        </p>
+                    </div>
+                    <div class="pt-3 flex items-center justify-between border-t border-white/10">
+                        <span class="text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-user-group text-blue-400/80 mr-1.5"></i>2–4 Игрока</span>
+                        <span class="text-xs font-extrabold text-blue-400 group-hover:translate-x-1 transition-transform flex items-center gap-1.5">Играть <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- UNO No Mercy -->
+                <div onclick="selectGame('no_mercy')" class="game-card group cursor-pointer rounded-3xl p-5 border border-slate-700/80 hover:border-rose-500 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-36 h-36 bg-rose-600/15 rounded-full blur-2xl group-hover:bg-rose-600/30 transition"></div>
+                    <div class="flex justify-between items-start relative h-20">
+                        <div class="relative w-20 h-20">
+                            <div class="mini-fan-1 absolute top-1 left-0 w-12 h-16 rounded-lg bg-slate-950 p-0.5 border border-amber-500/70 shadow-lg rotate-[-10deg]">
+                                <div class="w-full h-full bg-black rounded flex items-center justify-center">
+                                    <span class="text-amber-400 font-black text-[11px] uno-number-stroke">+6</span>
+                                </div>
+                            </div>
+                            <div class="mini-fan-2 absolute top-1 left-5 w-12 h-16 rounded-lg bg-slate-950 p-0.5 border border-rose-500 shadow-xl rotate-[6deg]">
+                                <div class="w-full h-full bg-gradient-to-br from-rose-950 to-black rounded flex items-center justify-center">
+                                    <span class="text-rose-500 font-black text-[11px] uno-number-stroke">+10</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[11px] font-extrabold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 shadow-sm">
+                            Хардкор
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white group-hover:text-rose-300 transition">UNO No Mercy</h3>
+                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                            Жёсткая битва: суммирование штрафов +6 и +10, обмен руками на 0 и 7, мгновенный вылет при 25 картах!
+                        </p>
+                    </div>
+                    <div class="pt-3 flex items-center justify-between border-t border-white/10">
+                        <span class="text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-fire text-rose-400/80 mr-1.5"></i>2–4 Игрока</span>
+                        <span class="text-xs font-extrabold text-rose-400 group-hover:translate-x-1 transition-transform flex items-center gap-1.5">Играть <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- UNO Flip -->
+                <div onclick="selectGame('flip')" class="game-card group cursor-pointer rounded-3xl p-5 border border-slate-700/80 hover:border-purple-400 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-36 h-36 bg-purple-500/15 rounded-full blur-2xl group-hover:bg-purple-500/30 transition"></div>
+                    <div class="flex justify-between items-start relative h-20">
+                        <div class="relative w-20 h-20">
+                            <div class="mini-fan-1 absolute top-1 left-0 w-12 h-16 rounded-lg bg-white p-0.5 border border-slate-300 shadow-lg rotate-[-10deg]">
+                                <div class="w-full h-full bg-[#00A651] rounded flex items-center justify-center">
+                                    <i class="fa-solid fa-sun text-white text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="mini-fan-2 absolute top-1 left-5 w-12 h-16 rounded-lg bg-slate-950 p-0.5 border border-pink-500 shadow-xl rotate-[6deg]">
+                                <div class="w-full h-full bg-[#EC008C] rounded flex items-center justify-center">
+                                    <i class="fa-solid fa-arrows-rotate text-white text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[11px] font-extrabold px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 shadow-sm">
+                            Две стороны
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white group-hover:text-purple-300 transition">UNO Flip</h3>
+                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                            Двусторонняя колода: карта FLIP меняет весь игровой стол на неоновую Тёмную сторону со штрафом +5!
+                        </p>
+                    </div>
+                    <div class="pt-3 flex items-center justify-between border-t border-white/10">
+                        <span class="text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-bolt text-purple-400/80 mr-1.5"></i>2–4 Игрока</span>
+                        <span class="text-xs font-extrabold text-purple-400 group-hover:translate-x-1 transition-transform flex items-center gap-1.5">Играть <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- Durak -->
+                <div onclick="selectGame('durak')" class="game-card group cursor-pointer rounded-3xl p-5 border border-slate-700/80 hover:border-amber-400 flex flex-col justify-between space-y-5 relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-36 h-36 bg-amber-500/15 rounded-full blur-2xl group-hover:bg-amber-500/30 transition"></div>
+                    <div class="flex justify-between items-start relative h-20">
+                        <div class="relative w-20 h-20">
+                            <div class="mini-fan-1 absolute top-1 left-0 w-12 h-16 rounded-lg bg-[#fdfbf7] p-0.5 border border-slate-300 shadow-lg rotate-[-10deg]">
+                                <div class="w-full h-full border border-amber-900/25 rounded flex flex-col items-center justify-between p-0.5 text-slate-900 font-serif font-black text-[10px]">
+                                    <span>К</span>
+                                    <span class="text-sm">♠</span>
+                                </div>
+                            </div>
+                            <div class="mini-fan-2 absolute top-1 left-5 w-12 h-16 rounded-lg bg-[#fdfbf7] p-0.5 border border-slate-300 shadow-xl rotate-[6deg]">
+                                <div class="w-full h-full border border-amber-900/25 rounded flex flex-col items-center justify-between p-0.5 text-red-600 font-serif font-black text-[10px]">
+                                    <span>Т</span>
+                                    <span class="text-sm">♥</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 shadow-sm">
+                            Атласная
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-white group-hover:text-amber-300 transition">Дурак (Подкидной)</h3>
+                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                            Классическая Атласная колода 36 карт на зелёном сукне, козыри и тактические атаки против ИИ.
+                        </p>
+                    </div>
+                    <div class="pt-3 flex items-center justify-between border-t border-white/10">
+                        <span class="text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-crown text-amber-400/80 mr-1.5"></i>2–4 Игрока</span>
+                        <span class="text-xs font-extrabold text-amber-400 group-hover:translate-x-1 transition-transform flex items-center gap-1.5">Играть <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= MATCH SETUP SCREEN ================= -->
+        <section id="setupScreen" class="hidden w-full max-w-2xl glass-panel rounded-3xl p-6 sm:p-8 my-auto space-y-6">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-indigo-400">Настройка стола</span>
+                    <h2 id="setupGameTitle" class="text-2xl sm:text-3xl font-black text-white mt-0.5">UNO Classic</h2>
+                    <p id="setupGameSubtitle" class="text-xs text-slate-400 mt-1">Классические правила</p>
+                </div>
+                <button onclick="goToLobby()" class="px-3.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-white/10 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </button>
+            </div>
+
+            <!-- Mode Selector: VS AI vs VS FRIEND BY ID -->
+            <div class="space-y-2.5">
+                <label class="text-xs font-extrabold uppercase tracking-wider text-slate-300">Режим игры</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="mode-ai" onclick="setMatchMode('ai')" class="py-3.5 px-4 rounded-2xl border-2 border-indigo-500 bg-indigo-950/60 text-white font-bold flex flex-col items-center justify-center gap-1 transition shadow-lg">
+                        <i class="fa-solid fa-robot text-indigo-400 text-lg"></i>
+                        <span class="text-sm font-black">Против ИИ</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5">Одиночная игра с ботами</span>
+                    </button>
+                    <button id="mode-pvp" onclick="setMatchMode('pvp')" class="py-3.5 px-4 rounded-2xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 font-bold flex flex-col items-center justify-center gap-1 transition">
+                        <i class="fa-solid fa-user-friends text-emerald-400 text-lg"></i>
+                        <span class="text-sm font-black">С другом по ID</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5">Онлайн-дуэль 1 на 1</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Options Panel -->
+            <div id="aiSetupOptions" class="space-y-5">
+                <!-- AI Difficulty -->
+                <div class="space-y-2.5">
+                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-300">Уровень сложности ИИ</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button id="diff-easy" onclick="setDifficulty('easy')" class="diff-btn py-3 px-3 rounded-2xl border border-slate-700 bg-slate-900/60 flex flex-col items-center justify-center transition">
+                            <span class="text-emerald-400 font-black text-sm">Лёгкий</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Для новичков</span>
+                        </button>
+                        <button id="diff-medium" onclick="setDifficulty('medium')" class="diff-btn py-3 px-3 rounded-2xl border-2 border-indigo-500 bg-indigo-950/60 flex flex-col items-center justify-center transition shadow-lg">
+                            <span class="text-amber-400 font-black text-sm">Средний</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Баланс сил</span>
+                        </button>
+                        <button id="diff-hard" onclick="setDifficulty('hard')" class="diff-btn py-3 px-3 rounded-2xl border border-slate-700 bg-slate-900/60 flex flex-col items-center justify-center transition">
+                            <span class="text-rose-400 font-black text-sm">Сложный</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Тактик</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bot Count -->
+                <div class="space-y-2.5">
+                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-300">Количество соперников</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button id="bots-1" onclick="setBotCount(1)" class="bot-btn py-3 px-4 rounded-2xl border-2 border-indigo-500 bg-indigo-950/60 text-white font-bold flex flex-col items-center transition shadow-lg">
+                            <span class="text-sm font-black">1 на 1</span>
+                            <span class="text-[10px] text-slate-400">1 бот</span>
+                        </button>
+                        <button id="bots-2" onclick="setBotCount(2)" class="bot-btn py-3 px-4 rounded-2xl border border-slate-700 bg-slate-900/60 text-slate-300 font-bold flex flex-col items-center transition">
+                            <span class="text-sm font-black">3 Игрока</span>
+                            <span class="text-[10px] text-slate-400">2 бота</span>
+                        </button>
+                        <button id="bots-3" onclick="setBotCount(3)" class="bot-btn py-3 px-4 rounded-2xl border border-slate-700 bg-slate-900/60 text-slate-300 font-bold flex flex-col items-center transition">
+                            <span class="text-sm font-black">4 Игрока</span>
+                            <span class="text-[10px] text-slate-400">3 бота</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="startSelectedGame()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:to-pink-400 text-white font-black text-base uppercase tracking-wider shadow-xl shadow-indigo-500/30 transition transform hover:scale-[1.01]">
+                    <i class="fa-solid fa-play mr-2"></i> Начать партию
+                </button>
+            </div>
+
+            <!-- PvP Multiplayer Options Panel -->
+            <div id="pvpSetupOptions" class="hidden space-y-5">
+                <!-- Require Registration Warning -->
+                <div id="pvpRegRequiredBox" class="bg-amber-950/60 border border-amber-500/40 rounded-2xl p-4 text-center space-y-3">
+                    <p class="text-xs text-amber-200 font-semibold">
+                        Чтобы играть против друга по ID, войдите в свой аккаунт или пройдите быструю регистрацию!
+                    </p>
+                    <div class="flex items-center justify-center gap-2.5">
+                        <button onclick="openAuthModal('login')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-black text-xs uppercase tracking-wider border border-white/10 transition">
+                            Войти
+                        </button>
+                        <button onclick="openAuthModal('register')" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition">
+                            Регистрация
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Registered PvP Lobby Controls -->
+                <div id="pvpReadyBox" class="hidden space-y-4">
+                    <div class="bg-slate-900/90 border border-indigo-500/30 rounded-2xl p-4 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Ваш игровой ID (отправьте другу):</span>
+                            <div id="setupMyIdDisplay" class="text-lg font-mono font-black text-amber-300 tracking-wider mt-0.5">CV-000000</div>
+                        </div>
+                        <button onclick="copyMyPlayerId()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold transition flex items-center gap-1.5">
+                            <i class="fa-regular fa-copy"></i> Копировать
+                        </button>
+                    </div>
+
+                    <!-- Create Room or Join Friend by ID -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-slate-900/70 border border-white/10 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+                            <div>
+                                <h4 class="text-sm font-black text-white">1. Создать стол</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Создайте комнату и ждите, пока друг введёт ваш ID.</p>
+                            </div>
+                            <button onclick="createPvpRoom()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider shadow-lg transition">
+                                <i class="fa-solid fa-door-open mr-1.5"></i> Создать и ждать
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900/70 border border-white/10 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+                            <div>
+                                <h4 class="text-sm font-black text-white">2. Войти по ID друга</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Введите ID друга, который уже создал стол:</p>
+                                <input id="friendIdInput" type="text" placeholder="Например: CV-482910" class="mt-2 w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-xs font-mono font-bold text-white uppercase">
+                            </div>
+                            <button onclick="joinPvpRoomById()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg transition">
+                                <i class="fa-solid fa-right-to-bracket mr-1.5"></i> Подключиться
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Waiting Room Status -->
+                    <div id="pvpWaitingBox" class="hidden bg-indigo-950/70 border border-indigo-400/50 rounded-2xl p-4 text-center space-y-2">
+                        <div class="flex items-center justify-center gap-2 text-indigo-300 font-bold text-xs">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <span id="pvpWaitingText">Ожидание подключения друга по вашему ID...</span>
+                        </div>
+                        <button onclick="cancelPvpWait()" class="text-[11px] text-rose-400 hover:underline font-bold">Отменить ожидание</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= ACTIVE GAME PLAY SCREEN ================= -->
+        <section id="gameScreen" class="hidden w-full flex flex-col flex-grow relative justify-between space-y-3">
+            
+            <!-- Game Top Info Bar -->
+            <div class="w-full glass-panel rounded-2xl px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
+                <div class="flex items-center gap-3">
+                    <button onclick="confirmExitGame()" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-white/10 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-left text-indigo-400"></i> Меню
+                    </button>
+                    <div>
+                        <span id="currentGameBadge" class="text-xs font-black text-white uppercase tracking-wider">UNO Classic</span>
+                        <span id="matchSettingsBadge" class="text-[11px] text-indigo-300/80 ml-2 font-semibold">Сложный • 3 Игрока</span>
+                    </div>
+                </div>
+
+                <!-- Turn & Status Notification Toast -->
+                <div id="gameStatusToast" class="text-xs font-bold text-amber-200 bg-amber-950/70 border border-amber-500/40 px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-circle-dot text-amber-400 animate-pulse text-[10px]"></i>
+                    <span id="statusText">Ваш ход! Выберите карту для хода.</span>
+                </div>
+
+                <button onclick="toggleLogDrawer()" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-white/10 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Лог
+                </button>
+            </div>
+
+            <!-- Opponents Hand Seats Top Area -->
+            <div id="opponentsArea" class="w-full flex items-center justify-around gap-2 px-2 py-1 min-h-[104px]">
+                <!-- Dynamic opponent cards inserted here by JS -->
+            </div>
+
+            <!-- Center Table Arena -->
+            <div id="tableArena" class="w-full flex-grow game-table-felt rounded-3xl p-4 relative flex flex-col items-center justify-center min-h-[270px] overflow-hidden transition-all duration-500">
+                
+                <!-- Direction Indicator, Active Color Pill & Stacked Penalty Counter Badge (UNO) -->
+                <div id="tableCenterOverlay" class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 z-10 text-xs pointer-events-none">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div id="directionBadge" class="bg-slate-950/80 backdrop-blur-md text-slate-200 px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5 shadow">
+                            <i id="directionIcon" class="fa-solid fa-rotate-right text-indigo-400"></i>
+                            <span id="directionText">По часовой</span>
+                        </div>
+                        <div id="activeColorPill" class="bg-slate-950/80 backdrop-blur-md text-white px-3 py-1 rounded-full border border-white/15 flex items-center gap-2 shadow font-bold">
+                            <span id="activeColorDot" class="w-3 h-3 rounded-full border border-white/60 shadow-sm"></span>
+                            <span id="activeColorText">Красный</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div id="penaltyBadge" class="hidden bg-red-950/90 text-red-200 px-3.5 py-1 rounded-full border border-red-500/70 font-black flex items-center gap-1.5 animate-pulse shadow-glow-red">
+                            <i class="fa-solid fa-skull"></i> Штраф: +<span id="penaltyValue">0</span>
+                        </div>
+                        <div id="flipSideBadge" class="hidden bg-purple-950/90 text-purple-200 px-3.5 py-1 rounded-full border border-purple-500/60 font-bold flex items-center gap-1.5 shadow">
+                            <i class="fa-solid fa-moon"></i> Тёмная сторона
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UNO Center Decks Layout -->
+                <div id="unoCenterTable" class="flex items-center justify-center gap-8 sm:gap-12 my-auto pt-4">
+                    <!-- Draw Deck Stack -->
+                    <div onclick="playerDrawCard()" class="group relative cursor-pointer flex flex-col items-center">
+                        <!-- Layered Stack Depth Effect -->
+                        <div class="relative">
+                            <div class="absolute -bottom-1.5 -right-1.5 w-20 h-28 sm:w-24 sm:h-34 rounded-xl bg-slate-950/90 border border-white/20"></div>
+                            <div class="absolute -bottom-0.5 -right-0.5 w-20 h-28 sm:w-24 sm:h-34 rounded-xl bg-slate-900/90 border border-white/20"></div>
+                            <div id="unoDrawDeckStack" class="relative w-20 h-28 sm:w-24 sm:h-34 rounded-xl shadow-2xl flex items-center justify-center group-hover:-translate-y-1.5 group-hover:scale-105 transition transform">
+                                <!-- Injected by JS (Uno Back) -->
+                            </div>
+                        </div>
+                        <span class="text-[11px] font-extrabold text-slate-200 mt-3 bg-slate-950/80 px-3 py-0.5 rounded-full border border-white/10 group-hover:border-indigo-400 transition">Взять (<span id="unoDeckCount">0</span>)</span>
+                    </div>
+
+                    <!-- Discard Pile Top Active Card -->
+                    <div class="flex flex-col items-center">
+                        <div id="discardPileCard" class="w-20 h-28 sm:w-24 sm:h-34 rounded-xl shadow-2xl flex items-center justify-center relative overflow-hidden transition-all duration-300 ring-4 ring-white/15">
+                            <!-- Card face rendered here -->
+                        </div>
+                        <span class="text-[11px] font-extrabold text-slate-200 mt-3 bg-slate-950/80 px-3 py-0.5 rounded-full border border-white/10">Сброс</span>
+                    </div>
+                </div>
+
+                <!-- Durak Center Table Layout -->
+                <div id="durakCenterTable" class="hidden w-full h-full flex flex-col items-center justify-center relative">
+                    <!-- Durak Draw Deck & Trump Card Stack -->
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center">
+                        <!-- Trump card sticking out sideways underneath deck -->
+                        <div id="durakTrumpCardSlot" class="w-16 h-24 sm:w-20 sm:h-28 rounded-xl shadow-md flex items-center justify-center -mr-10 rotate-90">
+                            <!-- Injected by JS -->
+                        </div>
+                        <!-- Remaining Deck Stack -->
+                        <div onclick="playerDrawDurak()" id="durakDeckStack" class="w-16 h-24 sm:w-20 sm:h-28 rounded-xl shadow-xl z-10 relative cursor-pointer">
+                            <!-- Injected by JS -->
+                        </div>
+                        <span id="durakDeckCount" class="ml-2 bg-slate-900/90 text-amber-300 border border-amber-500/40 text-xs font-black px-2 py-0.5 rounded-full z-20">24</span>
+                    </div>
+
+                    <!-- Battle Table Slots (Attacks & Defense pairs) -->
+                    <div id="durakPairsContainer" class="flex flex-wrap items-center justify-center gap-3 sm:gap-5 max-w-xl px-12">
+                        <!-- Pair elements injected dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Player Action Bar & Hand -->
+            <div class="w-full flex flex-col items-center space-y-2">
+                <!-- Action Buttons (UNO Shout, Take, Pass/Bita) -->
+                <div class="flex items-center gap-3">
+                    <button id="btnUnoShout" onclick="shoutUno()" class="hidden px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-red-600/30 transition transform hover:scale-105 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bullhorn"></i> UNO!
+                    </button>
+                    
+                    <button id="btnDurakTake" onclick="durakTakeCards()" class="hidden px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-700 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg transition">
+                        Беру карты
+                    </button>
+                    <button id="btnDurakDone" onclick="durakPassBita()" class="hidden px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg transition">
+                        Бита
+                    </button>
+                </div>
+
+                <!-- Player Hand Fan Container -->
+                <div id="playerHand" class="w-full flex items-end justify-center gap-0 sm:gap-1 min-h-[125px] sm:min-h-[145px] px-2 pt-4 pb-1 overflow-x-auto">
+                    <!-- Player cards injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Registration / Login Modal -->
+    <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-3xl border border-indigo-500/40 p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 mx-auto flex items-center justify-center text-white text-2xl shadow-lg">
+                    <i id="authModalIcon" class="fa-solid fa-right-to-bracket"></i>
+                </div>
+                <h3 id="authModalTitle" class="text-2xl font-black text-white">Вход в аккаунт</h3>
+                <p id="authModalSubtitle" class="text-xs text-slate-400">Войдите по Email, Username или ID, чтобы продолжить игру.</p>
+            </div>
+
+            <!-- Tabs: Login / Register -->
+            <div class="grid grid-cols-2 gap-1.5 bg-slate-950 p-1 rounded-2xl border border-white/10">
+                <button id="tabAuthLogin" onclick="switchAuthTab('login')" class="py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-xs transition">
+                    Вход
+                </button>
+                <button id="tabAuthRegister" onclick="switchAuthTab('register')" class="py-2 rounded-xl text-slate-400 hover:text-white font-extrabold text-xs transition">
+                    Регистрация
+                </button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginFormSection" class="space-y-3.5">
+                <div>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Email, Username или Игровой ID *</label>
+                    <input id="loginIdentifierInput" type="text" placeholder="example@mail.com, @alex_pro или CV-482910" class="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Пароль *</label>
+                    <input id="loginPasswordInput" type="password" placeholder="Введите ваш пароль" class="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white">
+                </div>
+                <p id="loginErrorText" class="hidden text-xs text-rose-400 font-bold"></p>
+                <button onclick="submitLogin()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm uppercase tracking-wider shadow-lg transition">
+                    Войти и играть
+                </button>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="registerFormSection" class="hidden space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Имя *</label>
+                        <input id="regFirstNameInput" type="text" maxlength="24" placeholder="Например: Алекс" class="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Фамилия *</label>
+                        <input id="regLastNameInput" type="text" maxlength="24" placeholder="Например: Смирнов" class="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Username (Никнейм) *</label>
+                    <input id="regUsernameInput" type="text" maxlength="20" placeholder="Например: @alex_pro" class="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Email *</label>
+                    <input id="regEmailInput" type="email" maxlength="60" placeholder="example@mail.com" class="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Пароль *</label>
+                    <input id="regPasswordInput" type="password" maxlength="40" placeholder="Минимум 6 символов" class="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none text-sm font-bold text-white">
+                </div>
+
+                <p id="regErrorText" class="hidden text-xs text-rose-400 font-bold"></p>
+                <button onclick="submitRegistration()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm uppercase tracking-wider shadow-lg transition">
+                    Зарегистрироваться и получить ID
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Profile & Search Modal -->
+    <div id="profileModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-3xl border border-indigo-500/40 p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+            <button onclick="closeProfileModal()" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="space-y-1">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-400">Карточка игрока</span>
+                <h3 class="text-2xl font-black text-white">Профиль и статистика</h3>
+            </div>
+
+            <!-- Search Bar by ID or Username -->
+            <div class="bg-slate-950/90 border border-white/10 rounded-2xl p-3.5 space-y-2">
+                <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Поиск игрока по ID или Username</label>
+                <div class="flex gap-2">
+                    <input id="profileSearchInput" type="text" placeholder="Например: CV-482910 или @alex_pro" class="flex-grow px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 focus:border-indigo-500 focus:outline-none text-xs font-bold text-white">
+                    <button onclick="searchPlayerProfile()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition flex items-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-magnifying-glass"></i> Найти
+                    </button>
+                    <button id="btnBackToMyProfile" onclick="viewMyProfile()" class="hidden px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition shrink-0" title="Вернуться к своему профилю">
+                        Мой
+                    </button>
+                </div>
+                <p id="profileSearchError" class="hidden text-xs text-rose-400 font-bold"></p>
+            </div>
+
+            <!-- Displayed Profile Card -->
+            <div id="profileDisplayCard" class="bg-gradient-to-br from-slate-800/90 to-slate-950 border border-indigo-500/30 rounded-2xl p-5 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 id="profFullName" class="text-lg font-black text-white">Гость</h4>
+                                <span id="profBadgeLabel" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Мой профиль</span>
+                            </div>
+                            <p id="profUsername" class="text-xs font-bold text-indigo-300">@guest</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[11px] font-mono text-amber-300 bg-slate-950/80 px-2 py-0.5 rounded border border-amber-400/30">
+                                    ID: <strong id="profId">---</strong>
+                                </span>
+                                <button onclick="copyDisplayedProfileId()" class="text-[11px] text-slate-400 hover:text-white transition" title="Скопировать ID">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                    <div class="bg-slate-950/80 border border-emerald-500/30 rounded-xl p-3 text-center">
+                        <div class="text-emerald-400 text-xs mb-1"><i class="fa-solid fa-trophy"></i></div>
+                        <div id="statWins" class="text-xl font-black text-white">0</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Побед</div>
+                    </div>
+                    <div class="bg-slate-950/80 border border-rose-500/30 rounded-xl p-3 text-center">
+                        <div class="text-rose-400 text-xs mb-1"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div id="statLosses" class="text-xl font-black text-white">0</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Поражений</div>
+                    </div>
+                    <div class="bg-slate-950/80 border border-indigo-500/30 rounded-xl p-3 text-center">
+                        <div class="text-indigo-400 text-xs mb-1"><i class="fa-solid fa-gamepad"></i></div>
+                        <div id="statMatches" class="text-xl font-black text-white">0</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Игр всего</div>
+                    </div>
+                    <div class="bg-slate-950/80 border border-amber-500/30 rounded-xl p-3 text-center">
+                        <div class="text-amber-400 text-xs mb-1"><i class="fa-solid fa-clock"></i></div>
+                        <div id="statHours" class="text-xl font-black text-white">0.0 ч</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 mt-0.5">В игре</div>
+                    </div>
+                </div>
+
+                <!-- Winrate Progress Bar -->
+                <div class="space-y-1.5 pt-1">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span class="text-slate-400">Процент побед (Winrate)</span>
+                        <span id="statWinrate" class="text-emerald-400">0%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-white/5">
+                        <div id="statWinrateBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profNotRegisteredHint" class="hidden text-center space-y-2 pt-1">
+                <p class="text-xs text-slate-400">Войдите или зарегистрируйтесь, чтобы сохранять статистику.</p>
+                <button onclick="openAuthModal('register')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">Создать аккаунт</button>
+            </div>
+
+            <div id="profLogoutBar" class="hidden pt-2 border-t border-white/10 flex justify-between items-center">
+                <span id="profEmailDisplay" class="text-[11px] text-slate-400 font-medium"></span>
+                <button onclick="logoutAccount()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white text-xs font-bold transition">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Выйти
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Picker Modal -->
+    <div id="colorPickerModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
+            <h3 class="text-xl font-black text-white">Выберите цвет</h3>
+            <p id="colorPickerSub" class="text-xs text-slate-400">Какой цвет должен стать активным?</p>
+            <div id="colorPickerGrid" class="grid grid-cols-2 gap-4 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- Swap Picker Modal -->
+    <div id="swapPickerModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 class="text-xl font-black text-white text-center">Выберите игрока</h3>
+            <div id="swapPickerList" class="flex flex-col gap-2.5 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- Log Drawer -->
+    <div id="logDrawer" class="hidden fixed bottom-14 right-4 z-40 bg-slate-900/95 border border-slate-700 rounded-2xl p-4 w-80 max-h-72 flex flex-col shadow-2xl backdrop-blur-md">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-2">
+            <span class="text-xs font-bold text-slate-200">История ходов</span>
+            <button onclick="toggleLogDrawer()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="logContent" class="flex-grow overflow-y-auto space-y-1.5 text-[11px] text-slate-300 pr-1"></div>
+    </div>
+
+    <!-- Victory / Game Over Overlay -->
+    <div id="gameOverModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8 max-w-md w-full text-center space-y-6 shadow-2xl">
+            <div id="gameResultIcon" class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 mx-auto flex items-center justify-center text-3xl font-black">🏆</div>
+            <div>
+                <h2 id="gameResultTitle" class="text-3xl font-black text-white">Победа!</h2>
+                <p id="gameResultSubtitle" class="text-xs text-slate-400 mt-1">Вы отлично сыграли данную партию!</p>
+            </div>
+            <div id="rankingsList" class="bg-slate-800/70 rounded-2xl p-3 border border-slate-700 space-y-2 text-xs text-left"></div>
+            <div class="flex gap-3">
+                <button onclick="restartMatch()" class="w-1/2 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-extrabold text-xs sm:text-sm transition">Сыграть ещё</button>
+                <button onclick="goToLobby()" class="w-1/2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm border border-slate-700 transition">В меню</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rulesModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-book-open text-amber-400 mr-2"></i>Правила настольных игр</h3>
+                <button onclick="closeRulesModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="overflow-y-auto space-y-4 text-xs text-slate-300 pr-2">
+                <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700"><h4 class="font-bold text-blue-400 text-sm mb-1">UNO Classic</h4><p>Сбрасывайте карты по совпадению цвета или значения. Используйте спецкарты и нажмите UNO при одной карте на руке.</p></div>
+                <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700"><h4 class="font-bold text-red-400 text-sm mb-1">UNO No Mercy</h4><p>Суммируйте штрафы, меняйте руки при карте 7 и 0 и избегайте 25 карт на руке.</p></div>
+                <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700"><h4 class="font-bold text-purple-400 text-sm mb-1">UNO Flip</h4><p>Карта FLIP меняет светлую и тёмную сторону колоды на протяжении всей партии.</p></div>
+                <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700"><h4 class="font-bold text-amber-400 text-sm mb-1">Дурак</h4><p>Отбивайтесь той же мастью выше рангом или козырем. Побеждает тот, кто первым сбросит все карты.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT GAME LOGIC ================= -->
+    <script>
+        // Cloud services are optional; the full game works in local mode.
+        const cloudUnavailable = true;
+
+        const GAME_META = {
+            uno: { title: 'UNO Classic', subtitle: 'Классические правила Mattel UNO' },
+            no_mercy: { title: 'UNO No Mercy', subtitle: 'Жёсткие правила: стеки +6/+10 и вылет при 25 картах' },
+            flip: { title: 'UNO Flip', subtitle: 'Двусторонняя колода со Светлой и Тёмной стороной' },
+            durak: { title: 'Дурак (Подкидной)', subtitle: 'Классическая Атласная колода 36 карт' }
+        };
+
+        const AVATARS = ['🤖', '🦊', '🐯', '🐼', '🦁', '🐙'];
+        const LIGHT_COLORS = ['red', 'blue', 'green', 'yellow'];
+        const DARK_COLORS = ['pink', 'teal', 'orange', 'purple'];
+        const COLOR_NAMES_RU = {
+            red: 'Красный',
+            blue: 'Синий',
+            green: 'Зелёный',
+            yellow: 'Жёлтый',
+            pink: 'Розовый',
+            teal: 'Бирюзовый',
+            orange: 'Оранжевый',
+            purple: 'Фиолетовый',
+            wild: 'Любой'
+        };
+
+        const state = {
+            selectedGame: 'uno',
+            matchMode: 'ai',
+            difficulty: 'medium',
+            botCount: 1,
+            soundEnabled: true,
+            userProfile: null,
+            pvpRoomId: null,
+            pvpHostId: null,
+            pvpUnsubscribe: null,
+            pvpLastActionId: 0,
+            matchStartTime: null,
+            gameOver: false,
+            aiTimeout: null,
+            players: [],
+            deck: [],
+            discardPile: [],
+            currentTurnIdx: 0,
+            direction: 1,
+            activeColor: 'red',
+            stackedPenalty: 0,
+            flipSide: 'light',
+            unoShouted: false,
+            pendingWildCard: null,
+            pendingSwapCard: null,
+            durakTrumpSuit: '♠',
+            durakTrumpCard: null,
+            durakPairs: [],
+            durakAttackerIdx: 0,
+            durakDefenderIdx: 1,
+            winnerIdx: null,
+            pvpResultRecorded: false
+        };
+
+        /* ================= WEB AUDIO SOUND SYNTHESIZER ================= */
+        let audioCtx = null;
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkit.AudioContext;
+                    audioCtx = new AudioContext();
+                }
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'card') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(280, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                    osc.start(now);
+                    osc.stop(now + 0.09);
+                } else if (type === 'draw') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(440, now + 0.1);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                    osc.start(now);
+                    osc.stop(now +  0.11);
+                } else if (type === 'special' || type === 'uno') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(660, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                } else if (type === 'win') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.12);
+                    osc.frequency.setValueAtTime(783.99, now + 0.24);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                }
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (icon) {
+                icon.className = state.soundEnabled
+                    ? 'fa-solid fa-volume-high text-indigo-400'
+                    : 'fa-solid fa-volume-xmark text-slate-500';
+            }
+        }
+
+        function generatePlayerId() {
+            const num = Math.floor(100000 + Math.random() * 900000);
+            return `CV-${num}`;
+        }
+
+        /* ================= FIREBASE CLOUD MULTIPLAYER SETUP ================= */
+        let db = null;
+        let auth = null;
+        let firebaseUser = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cardverse-default';
+
+        async function initCloudServices() {
+            try {
+                const localSaved = localStorage.getItem('cardverse_profile_v1');
+                if (localSaved) {
+                    const p = JSON.parse(localSaved);
+                    if (p && p.playerId) {
+                        applyRegisteredProfile(
+                            p.firstName || '',
+                            p.lastName || '',
+                            p.username || '',
+                            p.email || '',
+                            p.playerId,
+                            p.stats || { wins: 0, losses: 0, matches: 0, playSeconds: 0 },
+                            p.password || ''
+                        );
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                if (typeof __firebase_config === 'undefined') return;
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                firebaseUser = auth.currentUser;
+
+                if (firebaseUser && db) {
+                    const snap = await getDoc(doc(db, 'artifacts', appId, 'users', firebaseUser.uid, 'profile', 'info'));
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        applyRegisteredProfile(
+                            data.firstName || '',
+                            data.lastName || '',
+                            data.username || '',
+                            data.email || '',
+                            data.playerId,
+                            data.stats || { wins: 0, losses: 0, matches: 0, playSeconds: 0 },
+                            data.password || ''
+                        );
+                    }
+                }
+            } catch (e) {
+                console.warn('Cloud init fallback to local:', e);
+            }
+        }
+
+        function applyRegisteredProfile(firstName, lastName, username, email, playerId, stats, password = '') {
+            const cleanUser = username.startsWith('@') ? username : `@${username}`;
+            const fullName = `${firstName} ${lastName}`.trim();
+            state.userProfile = {
+                firstName,
+                lastName,
+                username: cleanUser,
+                nickname: cleanUser,
+                fullName: fullName || cleanUser,
+                email,
+                password: password || state.userProfile?.password || '',
+                playerId,
+                stats: stats || { wins: 0, losses: 0, matches: 0, playSeconds: 0 }
+            };
+
+            document.getElementById('headerPlayerName').innerText = state.userProfile.fullName;
+            document.getElementById('headerPlayerId').innerText = playerId;
+            document.getElementById('userProfilePill').classList.remove('hidden');
+            document.getElementById('headerRegisterBtn').classList.add('hidden');
+
+            document.getElementById('bannerTitle').innerText = `${state.userProfile.fullName} (${cleanUser})`;
+            document.getElementById('bannerSubtitle').innerHTML = `Ваш игровой ID: <strong class="text-amber-300 font-mono">${playerId}</strong> — делитесь им с друзьями для онлайн-дуэли!`;
+            const bLogin = document.getElementById('bannerLoginBtn');
+            if (bLogin) bLogin.classList.add('hidden');
+            document.getElementById('bannerRegBtn').classList.add('hidden');
+            document.getElementById('bannerProfileBtn').classList.remove('hidden');
+            document.getElementById('bannerCopyBtn').classList.remove('hidden');
+
+            const setupIdEl = document.getElementById('setupMyIdDisplay');
+            if (setupIdEl) setupIdEl.innerText = playerId;
+
+            if (state.matchMode === 'pvp') {
+                document.getElementById('pvpRegRequiredBox').classList.add('hidden');
+                document.getElementById('pvpReadyBox').classList.remove('hidden');
+            }
+        }
+
+        function getLocalAccountsDirectory() {
+            try {
+                return JSON.parse(localStorage.getItem('cardverse_accounts_db_v1') || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveAccountToLocalDirectory(profile) {
+            if (!profile || !profile.playerId) return;
+            try {
+                const dir = getLocalAccountsDirectory();
+                dir[profile.playerId] = profile;
+                localStorage.setItem('cardverse_accounts_db_v1', JSON.stringify(dir));
+                localStorage.setItem('cardverse_profile_v1', JSON.stringify(profile));
+            } catch (e) {}
+        }
+
+        async function saveUserProfileToCloud() {
+            if (!state.userProfile) return;
+            saveAccountToLocalDirectory(state.userProfile);
+
+            try {
+                if (firebaseUser && db) {
+                    const { firstName, lastName, username, nickname, fullName, email, password, playerId, stats } = state.userProfile;
+                    await setDoc(doc(db, 'artifacts', appId, 'users', firebaseUser.uid, 'profile', 'info'), {
+                        firstName, lastName, username, nickname, fullName, email, password, playerId, stats
+                    }, { merge: true });
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', playerId), {
+                        firstName, lastName, username, nickname, fullName, email, password, playerId, stats,
+                        uid: firebaseUser.uid,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                }
+            } catch (e) {
+                console.warn('Cloud profile sync skipped:', e);
+            }
+        }
+
+        function switchAuthTab(tab) {
+            const isLogin = tab === 'login';
+            document.getElementById('loginErrorText').classList.add('hidden');
+            document.getElementById('regErrorText').classList.add('hidden');
+
+            const tabLogin = document.getElementById('tabAuthLogin');
+            const tabReg = document.getElementById('tabAuthRegister');
+
+            if (isLogin) {
+                tabLogin.className = 'py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-xs transition';
+                tabReg.className = 'py-2 rounded-xl text-slate-400 hover:text-white font-extrabold text-xs transition';
+                document.getElementById('loginFormSection').classList.remove('hidden');
+                document.getElementById('registerFormSection').classList.add('hidden');
+                document.getElementById('authModalIcon').className = 'fa-solid fa-right-to-bracket';
+                document.getElementById('authModalTitle').innerText = 'Вход в аккаунт';
+                document.getElementById('authModalSubtitle').innerText = 'Войдите по Email, Username или ID, чтобы продолжить игру.';
+            } else {
+                tabReg.className = 'py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-xs transition';
+                tabLogin.className = 'py-2 rounded-xl text-slate-400 hover:text-white font-extrabold text-xs transition';
+                document.getElementById('registerFormSection').classList.remove('hidden');
+                document.getElementById('loginFormSection').classList.add('hidden');
+                document.getElementById('authModalIcon').className = 'fa-solid fa-id-badge';
+                document.getElementById('authModalTitle').innerText = 'Регистрация игрока';
+                document.getElementById('authModalSubtitle').innerText = 'Заполните данные аккаунта — система выдаст вам персональный ID.';
+            }
+        }
+
+        function openAuthModal(defaultTab = 'login') {
+            switchAuthTab(defaultTab);
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        async function submitLogin() {
+            const rawId = document.getElementById('loginIdentifierInput').value.trim();
+            const password = document.getElementById('loginPasswordInput').value;
+            const errEl = document.getElementById('loginErrorText');
+            errEl.classList.add('hidden');
+
+            if (!rawId || !password) {
+                errEl.innerText = 'Введите Email / Username / ID и пароль.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            const normLower = rawId.toLowerCase();
+            const normUser = rawId.startsWith('@') ? normLower : `@${normLower}`;
+            const upperId = rawId.toUpperCase().startsWith('CV-') ? rawId.toUpperCase() : `CV-${rawId.toUpperCase()}`;
+
+            // 1. Check local saved accounts first
+            const localDir = getLocalAccountsDirectory();
+            let matchedAccount = Object.values(localDir).find(acc =>
+                (acc.email && acc.email.toLowerCase() === normLower) ||
+                (acc.username && acc.username.toLowerCase() === normUser) ||
+                (acc.playerId && (acc.playerId === rawId.toUpperCase() || acc.playerId === upperId))
+            );
+
+            // 2. Check Firestore cloud accounts if available
+            if (!matchedAccount && db) {
+                try {
+                    const allPlayersSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'players'));
+                    allPlayersSnap.forEach(docSnap => {
+                        const acc = docSnap.data();
+                        if (
+                            (acc.email && acc.email.toLowerCase() === normLower) ||
+                            (acc.username && acc.username.toLowerCase() === normUser) ||
+                            (acc.playerId && (acc.playerId === rawId.toUpperCase() || acc.playerId === upperId))
+                        ) {
+                            matchedAccount = acc;
+                        }
+                    });
+                } catch (e) {}
+            }
+
+            if (!matchedAccount) {
+                errEl.innerText = 'Аккаунт не найден. Проверьте данные или перейдите во вкладку «Регистрация».';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            if (matchedAccount.password && matchedAccount.password !== password) {
+                errEl.innerText = 'Неверный пароль. Попробуйте ещё раз.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            applyRegisteredProfile(
+                matchedAccount.firstName || '',
+                matchedAccount.lastName || '',
+                matchedAccount.username || '',
+                matchedAccount.email || '',
+                matchedAccount.playerId,
+                matchedAccount.stats || { wins: 0, losses: 0, matches: 0, playSeconds: 0 },
+                matchedAccount.password || password
+            );
+            await saveUserProfileToCloud();
+
+            closeAuthModal();
+            showToast(`С возвращением, ${state.userProfile.fullName}!`);
+        }
+
+        function logoutAccount() {
+            state.userProfile = null;
+            try {
+                localStorage.removeItem('cardverse_profile_v1');
+            } catch (e) {}
+
+            document.getElementById('userProfilePill').classList.add('hidden');
+            document.getElementById('headerRegisterBtn').classList.remove('hidden');
+
+            document.getElementById('bannerTitle').innerText = 'Войди в аккаунт или получи игровой ID';
+            document.getElementById('bannerSubtitle').innerText = 'Авторизуйся, чтобы сохранять статистику побед и приглашать друзей по ID.';
+            const bLogin = document.getElementById('bannerLoginBtn');
+            if (bLogin) bLogin.classList.remove('hidden');
+            document.getElementById('bannerRegBtn').classList.remove('hidden');
+            document.getElementById('bannerProfileBtn').classList.add('hidden');
+            document.getElementById('bannerCopyBtn').classList.add('hidden');
+
+            closeProfileModal();
+            showToast('Вы вышли из аккаунта.');
+        }
+
+        async function submitRegistration() {
+            const firstName = document.getElementById('regFirstNameInput').value.trim();
+            const lastName = document.getElementById('regLastNameInput').value.trim();
+            const rawUser = document.getElementById('regUsernameInput').value.trim();
+            const email = document.getElementById('regEmailInput').value.trim();
+            const password = document.getElementById('regPasswordInput').value;
+            const errEl = document.getElementById('regErrorText');
+
+            if (!firstName || !lastName) {
+                errEl.innerText = 'Пожалуйста, введите Имя и Фамилию.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (rawUser.length < 3) {
+                errEl.innerText = 'Username должен содержать минимум 3 символа.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                errEl.innerText = 'Введите корректный Email адрес.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (password.length < 6) {
+                errEl.innerText = 'Пароль должен содержать минимум 6 символов.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            const newId = generatePlayerId();
+            const freshStats = { wins: 0, losses: 0, matches: 0, playSeconds: 0 };
+            applyRegisteredProfile(firstName, lastName, rawUser, email, newId, freshStats, password);
+            await saveUserProfileToCloud();
+
+            closeAuthModal();
+            showToast(`Аккаунт создан! Ваш игровой ID: ${newId}`);
+        }
+
+        function copyTextToClipboard(text, toastMsg) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast(toastMsg);
+        }
+
+        function copyMyPlayerId() {
+            if (!state.userProfile) return;
+            copyTextToClipboard(state.userProfile.playerId, `ID ${state.userProfile.playerId} скопирован!`);
+        }
+
+        function copyDisplayedProfileId() {
+            const idText = document.getElementById('profId').innerText;
+            if (idText && idText !== '---') {
+                copyTextToClipboard(idText, `ID ${idText} скопирован!`);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('copyToast');
+            document.getElementById('copyToastText').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function renderProfileCard(profileObj, isOwn) {
+            const stats = profileObj.stats || { wins: 0, losses: 0, matches: 0, playSeconds: 0 };
+            const wins = stats.wins || 0;
+            const losses = stats.losses || 0;
+            const matches = stats.matches || (wins + losses);
+            const hours = ((stats.playSeconds || 0) / 3600).toFixed(1);
+            const winrate = matches > 0 ? Math.round((wins / matches) * 100) : 0;
+
+            document.getElementById('profFullName').innerText = profileObj.fullName || 'Игрок';
+            document.getElementById('profUsername').innerText = profileObj.username || '@player';
+            document.getElementById('profId').innerText = profileObj.playerId || '---';
+
+            const badge = document.getElementById('profBadgeLabel');
+            if (isOwn) {
+                badge.innerText = 'Мой профиль';
+                badge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                document.getElementById('btnBackToMyProfile').classList.add('hidden');
+            } else {
+                badge.innerText = 'Найденный игрок';
+                badge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+                document.getElementById('btnBackToMyProfile').classList.remove('hidden');
+            }
+
+            document.getElementById('statWins').innerText = wins;
+            document.getElementById('statLosses').innerText = losses;
+            document.getElementById('statMatches').innerText = matches;
+            document.getElementById('statHours').innerText = `${hours} ч`;
+            document.getElementById('statWinrate').innerText = `${winrate}%`;
+            document.getElementById('statWinrateBar').style.width = `${winrate}%`;
+        }
+
+        function viewMyProfile() {
+            document.getElementById('profileSearchError').classList.add('hidden');
+            const logoutBar = document.getElementById('profLogoutBar');
+            if (state.userProfile) {
+                document.getElementById('profNotRegisteredHint').classList.add('hidden');
+                if (logoutBar) {
+                    logoutBar.classList.remove('hidden');
+                    document.getElementById('profEmailDisplay').innerText = state.userProfile.email || '';
+                }
+                renderProfileCard(state.userProfile, true);
+            } else {
+                document.getElementById('profNotRegisteredHint').classList.remove('hidden');
+                if (logoutBar) logoutBar.classList.add('hidden');
+                renderProfileCard({
+                    fullName: 'Гость',
+                    username: '@guest',
+                    playerId: 'Не авторизован',
+                    stats: { wins: 0, losses: 0, matches: 0, playSeconds: 0 }
+                }, true);
+            }
+        }
+
+        function openProfileModal() {
+            document.getElementById('profileSearchInput').value = '';
+            viewMyProfile();
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        async function searchPlayerProfile() {
+            const raw = document.getElementById('profileSearchInput').value.trim();
+            const errEl = document.getElementById('profileSearchError');
+            errEl.classList.add('hidden');
+
+            if (!raw) {
+                errEl.innerText = 'Введите ID (например, CV-482910) или Username игрока.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            if (state.userProfile) {
+                const upper = raw.toUpperCase();
+                const idCand = upper.startsWith('CV-') ? upper : `CV-${upper}`;
+                const normUser = raw.startsWith('@') ? raw.toLowerCase() : `@${raw.toLowerCase()}`;
+                if (upper === state.userProfile.playerId || idCand === state.userProfile.playerId || normUser === state.userProfile.username.toLowerCase()) {
+                    viewMyProfile();
+                    return;
+                }
+            }
+
+            if (!db) {
+                errEl.innerText = 'Игрок не найден локально (облачный поиск недоступен в офлайн-режиме).';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const upper = raw.toUpperCase();
+                const idCandidate = upper.startsWith('CV-') ? upper : `CV-${upper}`;
+                const directSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'players', idCandidate));
+                if (directSnap.exists()) {
+                    renderProfileCard(directSnap.data(), false);
+                    return;
+                }
+
+                const normUsername = raw.startsWith('@') ? raw.toLowerCase() : `@${raw.toLowerCase()}`;
+                const allPlayersSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'players'));
+                let foundPlayer = null;
+                allPlayersSnap.forEach(docSnap => {
+                    const p = docSnap.data();
+                    if (p.username && p.username.toLowerCase() === normUsername) {
+                        foundPlayer = p;
+                    }
+                });
+
+                if (foundPlayer) {
+                    renderProfileCard(foundPlayer, false);
+                } else {
+                    errEl.innerText = 'Игрок с таким ID или Username не найден.';
+                    errEl.classList.remove('hidden');
+                }
+            } catch (e) {
+                errEl.innerText = 'Ошибка поиска профиля. Попробуйте ещё раз.';
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        async function recordMatchOutcome(didWin) {
+            if (!state.userProfile) return;
+            const elapsedSec = state.matchStartTime ? Math.max(10, Math.round((Date.now() - state.matchStartTime) / 1000)) : 60;
+            if (!state.userProfile.stats) {
+                state.userProfile.stats = { wins: 0, losses: 0, matches: 0, playSeconds: 0 };
+            }
+            state.userProfile.stats.matches += 1;
+            if (didWin) {
+                state.userProfile.stats.wins += 1;
+            } else {
+                state.userProfile.stats.losses += 1;
+            }
+            state.userProfile.stats.playSeconds += elapsedSec;
+            await saveUserProfileToCloud();
+        }
+
+        /* ================= NAVIGATION & MATCH SETUP ================= */
+        function showScreen(screenId) {
+            ['lobbyScreen', 'setupScreen', 'gameScreen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function selectGame(gameKey) {
+            state.selectedGame = gameKey;
+            const meta = GAME_META[gameKey];
+            document.getElementById('setupGameTitle').innerText = meta.title;
+            document.getElementById('setupGameSubtitle').innerText = meta.subtitle;
+            setMatchMode('ai');
+            showScreen('setupScreen');
+        }
+
+        function goToLobby() {
+            clearTimeout(state.aiTimeout);
+            cancelPvpWait();
+            document.body.classList.remove('dark-flip-mode');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            showScreen('lobbyScreen');
+        }
+
+        function setMatchMode(mode) {
+            state.matchMode = mode;
+            const btnAi = document.getElementById('mode-ai');
+            const btnPvp = document.getElementById('mode-pvp');
+
+            if (mode === 'ai') {
+                btnAi.className = 'py-3.5 px-4 rounded-2xl border-2 border-indigo-500 bg-indigo-950/60 text-white font-bold flex flex-col items-center justify-center gap-1 transition shadow-lg';
+                btnPvp.className = 'py-3.5 px-4 rounded-2xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 font-bold flex flex-col items-center justify-center gap-1 transition';
+                document.getElementById('aiSetupOptions').classList.remove('hidden');
+                document.getElementById('pvpSetupOptions').classList.add('hidden');
+            } else {
+                btnPvp.className = 'py-3.5 px-4 rounded-2xl border-2 border-emerald-500 bg-emerald-950/50 text-white font-bold flex flex-col items-center justify-center gap-1 transition shadow-lg';
+                btnAi.className = 'py-3.5 px-4 rounded-2xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 font-bold flex flex-col items-center justify-center gap-1 transition';
+                document.getElementById('aiSetupOptions').classList.add('hidden');
+                document.getElementById('pvpSetupOptions').classList.remove('hidden');
+
+                if (state.userProfile) {
+                    document.getElementById('pvpRegRequiredBox').classList.add('hidden');
+                    document.getElementById('pvpReadyBox').classList.remove('hidden');
+                    document.getElementById('setupMyIdDisplay').innerText = state.userProfile.playerId;
+                } else {
+                    document.getElementById('pvpRegRequiredBox').classList.remove('hidden');
+                    document.getElementById('pvpReadyBox').classList.add('hidden');
+                }
+            }
+        }
+
+        function setDifficulty(diff) {
+            state.difficulty = diff;
+            ['easy', 'medium', 'hard'].forEach(d => {
+                const btn = document.getElementById(`diff-${d}`);
+                if (d === diff) {
+                    btn.className = 'diff-btn py-3 px-3 rounded-2xl border-2 border-indigo-500 bg-indigo-950/60 flex flex-col items-center justify-center transition shadow-lg';
+                } else {
+                    btn.className = 'diff-btn py-3 px-3 rounded-2xl border border-slate-700 bg-slate-900/60 flex flex-col items-center justify-center transition';
+                }
+            });
+        }
+
+        function setBotCount(count) {
+            state.botCount = count;
+            [1, 2, 3].forEach(c => {
+                const btn = document.getElementById(`bots-${c}`);
+                if (c === count) {
+                    btn.className = 'bot-btn py-3 px-4 rounded-2xl border-2 border-indigo-500 bg-indigo-950/60 text-white font-bold flex flex-col items-center transition shadow-lg';
+                } else {
+                    btn.className = 'bot-btn py-3 px-4 rounded-2xl border border-slate-700 bg-slate-900/60 text-slate-300 font-bold flex flex-col items-center transition';
+                }
+            });
+        }
+
+        function openRulesModal() {
+            document.getElementById('rulesModal').classList.remove('hidden');
+        }
+
+        function closeRulesModal() {
+            document.getElementById('rulesModal').classList.add('hidden');
+        }
+
+        function toggleLogDrawer() {
+            document.getElementById('logDrawer').classList.toggle('hidden');
+        }
+
+        function addLog(htmlMsg) {
+            const logBox = document.getElementById('logContent');
+            if (!logBox) return;
+            const entry = document.createElement('div');
+            entry.className = 'border-b border-slate-800/70 pb-1';
+            entry.innerHTML = htmlMsg;
+            logBox.prepend(entry);
+        }
+
+        function confirmExitGame() {
+            goToLobby();
+        }
+
+        function restartMatch() {
+            document.getElementById('gameOverModal').classList.add('hidden');
+            startSelectedGame();
+        }
+
+        function getMyLocalPlayerIndex() {
+            if (state.matchMode === 'pvp' && state.userProfile) {
+                const idx = state.players.findIndex(p => p.playerId === state.userProfile.playerId);
+                return idx !== -1 ? idx : 0;
+            }
+            return 0;
+        }
+
+        /* ================= PVP MULTIPLAYER BY ID ================= */
+        async function createPvpRoom() {
+            if (!state.userProfile || !db) {
+                showToast('Облачный сервис недоступен. Попробуйте игру против ИИ.');
+                return;
+            }
+            const hostId = state.userProfile.playerId;
+            state.pvpRoomId = hostId;
+            state.pvpHostId = hostId;
+
+            document.getElementById('pvpWaitingBox').classList.remove('hidden');
+            document.getElementById('pvpWaitingText').innerText = `Ожидание друга по вашему ID (${hostId})...`;
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'pvp_rooms', hostId);
+            await setDoc(roomRef, {
+                roomId: hostId,
+                gameType: state.selectedGame,
+                status: 'waiting',
+                host: {
+                    playerId: hostId,
+                    name: state.userProfile.username,
+                    avatar: '😎'
+                },
+                guest: null,
+                gameState: null,
+                actionId: 0,
+                updatedAt: Date.now()
+            });
+
+            if (state.pvpUnsubscribe) state.pvpUnsubscribe();
+            state.pvpUnsubscribe = onSnapshot(roomRef, (snap) => {
+                if (!snap.exists()) return;
+                const data = snap.data();
+                if (data.status === 'active' && data.guest && !data.gameState) {
+                    document.getElementById('pvpWaitingBox').classList.add('hidden');
+                    startPvpHostMatch(data.host, data.guest);
+                } else if (data.status === 'active' && data.gameState && data.actionId > state.pvpLastActionId) {
+                    state.pvpLastActionId = data.actionId;
+                    applySyncedPvpState(data.gameState);
+                }
+            });
+        }
+
+        async function joinPvpRoomById() {
+            if (!state.userProfile || !db) return;
+            const rawInput = document.getElementById('friendIdInput').value.trim().toUpperCase();
+            const targetId = rawInput.startsWith('CV-') ? rawInput : `CV-${rawInput}`;
+            if (targetId.length < 6) {
+                showToast('Введите корректный ID друга!');
+                return;
+            }
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'pvp_rooms', targetId);
+            const snap = await getDoc(roomRef);
+            if (!snap.exists() || snap.data().status !== 'waiting') {
+                showToast('Комната с таким ID не найдена или игра уже идёт.');
+                return;
+            }
+
+            const roomData = snap.data();
+            state.selectedGame = roomData.gameType;
+            state.pvpRoomId = targetId;
+            state.pvpHostId = targetId;
+
+            await updateDoc(roomRef, {
+                status: 'active',
+                guest: {
+                    playerId: state.userProfile.playerId,
+                    name: state.userProfile.username,
+                    avatar: '🔥'
+                },
+                updatedAt: Date.now()
+            });
+
+            if (state.pvpUnsubscribe) state.pvpUnsubscribe();
+            state.pvpUnsubscribe = onSnapshot(roomRef, (s) => {
+                if (!s.exists()) return;
+                const d = s.data();
+                if (d.gameState && d.actionId > state.pvpLastActionId) {
+                    state.pvpLastActionId = d.actionId;
+                    applySyncedPvpState(d.gameState);
+                }
+            });
+        }
+
+        function cancelPvpWait() {
+            if (state.pvpUnsubscribe) {
+                state.pvpUnsubscribe();
+                state.pvpUnsubscribe = null;
+            }
+            const waitBox = document.getElementById('pvpWaitingBox');
+            if (waitBox) waitBox.classList.add('hidden');
+        }
+
+        function startPvpHostMatch(hostInfo, guestInfo) {
+            state.matchStartTime = Date.now();
+            state.gameOver = false;
+            state.winnerIdx = null;
+            state.pvpResultRecorded = false;
+            state.pvpLastActionId = 1;
+            document.getElementById('logContent').innerHTML = '';
+
+            state.players = [
+                { id: 0, playerId: hostInfo.playerId, name: hostInfo.name, isHuman: true, avatar: hostInfo.avatar, hand: [], eliminated: false },
+                { id: 1, playerId: guestInfo.playerId, name: guestInfo.name, isHuman: true, avatar: guestInfo.avatar, hand: [], eliminated: false }
+            ];
+
+            setupTableHeaderUI();
+            showScreen('gameScreen');
+
+            if (state.selectedGame === 'durak') {
+                initDurakGame();
+            } else {
+                initUnoGame();
+            }
+            syncPvpStateToCloud();
+        }
+
+        async function syncPvpStateToCloud() {
+            if (state.matchMode !== 'pvp' || !state.pvpRoomId || !db) return;
+            state.pvpLastActionId += 1;
+            const payload = {
+                players: state.players,
+                deck: state.deck,
+                discardPile: state.discardPile,
+                currentTurnIdx: state.currentTurnIdx,
+                direction: state.direction,
+                activeColor: state.activeColor,
+                stackedPenalty: state.stackedPenalty,
+                flipSide: state.flipSide,
+                gameOver: state.gameOver,
+                durakTrumpSuit: state.durakTrumpSuit,
+                durakTrumpCard: state.durakTrumpCard,
+                durakPairs: state.durakPairs,
+                durakAttackerIdx: state.durakAttackerIdx,
+                durakDefenderIdx: state.durakDefenderIdx,
+                winnerIdx: state.winnerIdx
+            };
+            try {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'pvp_rooms', state.pvpRoomId);
+                await updateDoc(roomRef, {
+                    gameState: JSON.stringify(payload),
+                    actionId: state.pvpLastActionId,
+                    updatedAt: Date.now()
+                });
+            } catch (e) {
+                console.error('Error syncing PVP state:', e);
+            }
+        }
+
+        function applySyncedPvpState(jsonStr) {
+            try {
+                const data = JSON.parse(jsonStr);
+                Object.assign(state, data);
+                setupTableHeaderUI();
+                showScreen('gameScreen');
+                if (state.selectedGame === 'durak') {
+                    const arena = document.getElementById('tableArena');
+                    if (arena) arena.classList.add('durak-felt');
+                    document.getElementById('unoCenterTable').classList.add('hidden');
+                    document.getElementById('durakCenterTable').classList.remove('hidden');
+                    document.getElementById('tableCenterOverlay').classList.add('hidden');
+                    renderDurakTable();
+                } else {
+                    const arena = document.getElementById('tableArena');
+                    if (arena) arena.classList.remove('durak-felt');
+                    document.getElementById('unoCenterTable').classList.remove('hidden');
+                    document.getElementById('durakCenterTable').classList.add('hidden');
+                    document.getElementById('tableCenterOverlay').classList.remove('hidden');
+                    renderUnoTable();
+                }
+                if (state.gameOver) {
+                    if (!state.pvpResultRecorded) {
+                        state.pvpResultRecorded = true;
+                        recordMatchOutcome(state.winnerIdx === getMyLocalPlayerIndex());
+                    }
+                    if (document.getElementById('gameOverModal').classList.contains('hidden')) {
+                        showGameOverModal();
+                    }
+                } else {
+                    document.getElementById('gameOverModal').classList.add('hidden');
+                }
+            } catch (e) {
+                console.error('Error applying synced PVP state:', e);
+            }
+        }
+
+        /* ================= START SINGLE-PLAYER MATCH ================= */
+        function setupTableHeaderUI() {
+            const meta = GAME_META[state.selectedGame];
+            document.getElementById('currentGameBadge').innerText = meta.title;
+            const diffRu = { easy: 'Лёгкий', medium: 'Средний', hard: 'Сложный' }[state.difficulty];
+            document.getElementById('matchSettingsBadge').innerText = state.matchMode === 'pvp'
+                ? 'Онлайн PvP по ID'
+                : `${diffRu} • ${state.players.length} Игрока`;
+        }
+
+        function startSelectedGame() {
+            clearTimeout(state.aiTimeout);
+            state.matchStartTime = Date.now();
+            state.gameOver = false;
+            state.winnerIdx = null;
+            state.pvpResultRecorded = false;
+            document.getElementById('logContent').innerHTML = '';
+
+            const myName = state.userProfile ? state.userProfile.username : 'Вы';
+            state.players = [
+                { id: 0, name: myName, isHuman: true, avatar: '😎', hand: [], eliminated: false }
+            ];
+
+            const botNames = ['Бот Алекс', 'Бот Мия', 'Бот Лео'];
+            for (let i = 0; i < state.botCount; i++) {
+                state.players.push({
+                    id: i + 1,
+                    name: botNames[i],
+                    isHuman: false,
+                    avatar: AVATARS[i % AVATARS.length],
+                    hand: [],
+                    eliminated: false
+                });
+            }
+
+            setupTableHeaderUI();
+            showScreen('gameScreen');
+
+            if (state.selectedGame === 'durak') {
+                initDurakGame();
+            } else {
+                initUnoGame();
+            }
+        }
+
+        /* ================= CARD HTML RENDERERS ================= */
+        function renderUnoCardBackHTML(isDark = false) {
+            return `
+                <div class="w-full h-full rounded-xl ${isDark ? 'bg-slate-950 border-2 border-purple-500/70' : 'bg-slate-950 border-2 border-white'} p-1.5 flex items-center justify-center relative overflow-hidden card-gloss shadow-inner">
+                    <div class="w-full h-full rounded-lg bg-gradient-to-br from-slate-900 to-black flex items-center justify-center relative">
+                        <div class="w-16 h-10 bg-gradient-to-tr from-red-600 to-rose-500 rounded-full -rotate-25 flex items-center justify-center border-2 border-amber-300 shadow-lg">
+                            <span class="font-black text-amber-300 text-xs tracking-tighter uno-corner-stroke italic">UNO</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getUnoCardColors(color, isDark) {
+            const map = {
+                red: { bg: 'bg-[#ED1C24]', text: 'text-[#ED1C24]' },
+                blue: { bg: 'bg-[#0072BC]', text: 'text-[#0072BC]' },
+                green: { bg: 'bg-[#00A651]', text: 'text-[#00A651]' },
+                yellow: { bg: 'bg-[#FFDE00]', text: 'text-[#EAB308]' },
+                pink: { bg: 'bg-[#EC008C]', text: 'text-[#EC008C]' },
+                teal: { bg: 'bg-[#00B5AD]', text: 'text-[#00B5AD]' },
+                orange: { bg: 'bg-[#F37021]', text: 'text-[#F37021]' },
+                purple: { bg: 'bg-[#7F3F98]', text: 'text-[#7F3F98]' },
+                wild: { bg: 'bg-gradient-to-br from-rose-600 via-amber-500 to-blue-600', text: 'text-white' }
+            };
+            return map[color] || (isDark ? map.purple : map.red);
+        }
+
+        function getUnoSymbolLabel(val) {
+            const labels = {
+                skip: '⊘',
+                skip_all: '⊘⊘',
+                reverse: '⇄',
+                draw2: '+2',
+                draw5: '+5',
+                draw6: '+6',
+                draw10: '+10',
+                wild: 'W',
+                wild_draw4: '+4',
+                wild_draw_color: '🎨',
+                discard_all: '⬇',
+                flip: '🔄'
+            };
+            return labels[val] !== undefined ? labels[val] : String(val);
+        }
+
+        function renderUnoCardHTML(card, isSmall = false) {
+            if (!card) return '';
+            const isDark = state.selectedGame === 'flip' && state.flipSide === 'dark';
+            const face = (state.selectedGame === 'flip' && card.dark)
+                ? (isDark ? card.dark : card.light)
+                : card;
+
+            const colors = getUnoCardColors(face.color, isDark);
+            const label = getUnoSymbolLabel(face.value);
+            const frameClass = isDark
+                ? 'bg-slate-950 border-2 border-pink-500/70'
+                : 'bg-white border border-slate-300';
+            const ovalClass = isDark ? 'uno-oval-dark border border-white/25' : 'uno-oval-white';
+
+            return `
+                <div class="w-full h-full rounded-xl ${frameClass} p-1 shadow-md select-none relative overflow-hidden card-gloss">
+                    <div class="w-full h-full rounded-lg ${colors.bg} relative flex items-center justify-center overflow-hidden">
+                        <span class="absolute top-1 left-1.5 text-white font-black ${isSmall ? 'text-[10px]' : 'text-xs sm:text-sm'} uno-corner-stroke leading-none">${label}</span>
+                        <div class="${isSmall ? 'w-11 h-14' : 'w-14 h-20 sm:w-16 sm:h-24'} ${ovalClass} flex items-center justify-center">
+                            <span class="font-black ${isSmall ? 'text-lg' : 'text-2xl sm:text-3xl'} text-white uno-number-stroke tracking-tighter">${label}</span>
+                        </div>
+                        <span class="absolute bottom-1 right-1.5 text-white font-black ${isSmall ? 'text-[10px]' : 'text-xs sm:text-sm'} uno-corner-stroke leading-none rotate-180">${label}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDurakCardBackHTML() {
+            return `
+                <div class="w-full h-full rounded-xl bg-white p-1 border border-slate-300 shadow-md overflow-hidden card-gloss">
+                    <div class="w-full h-full rounded-lg bg-gradient-to-br from-red-900 via-rose-800 to-slate-950 border border-amber-400/50 flex items-center justify-center">
+                        <div class="w-8 h-12 border border-amber-300/40 rounded flex items-center justify-center text-amber-300/70 text-xs">
+                            ❖
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getDurakRankLabel(rank) {
+            const map = { 11: 'В', 12: 'Д', 13: 'К', 14: 'Т' };
+            return map[rank] || String(rank);
+        }
+
+        function renderDurakCardHTML(card) {
+            if (!card) return '';
+            const isRed = card.suit === '♥' || card.suit === '♦';
+            const textColor = isRed ? 'text-red-600' : 'text-slate-900';
+            const rankStr = getDurakRankLabel(card.rank);
+
+            return `
+                <div class="w-full h-full rounded-xl bg-[#fdfbf7] border border-slate-300 p-1 shadow-md select-none relative overflow-hidden card-gloss">
+                    <div class="w-full h-full rounded-lg border border-amber-900/20 relative flex flex-col justify-between p-1.5 ${textColor} font-serif font-black">
+                        <div class="flex flex-col items-center self-start leading-none">
+                            <span class="text-xs sm:text-sm">${rankStr}</span>
+                            <span class="text-xs">${card.suit}</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl self-center leading-none">${card.suit}</div>
+                        <div class="flex flex-col items-center self-end leading-none rotate-180">
+                            <span class="text-xs sm:text-sm">${rankStr}</span>
+                            <span class="text-xs">${card.suit}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* ================= UNO ENGINE (CLASSIC, NO MERCY, FLIP) ================= */
+        function buildUnoDeck() {
+            const deck = [];
+            if (state.selectedGame === 'flip') {
+                const lightSpecials = ['skip', 'reverse', 'draw2', 'flip'];
+                const darkSpecials = ['skip_all', 'reverse', 'draw5', 'flip'];
+                for (let i = 0; i < 4; i++) {
+                    const lCol = LIGHT_COLORS[i];
+                    const dCol = DARK_COLORS[i];
+                    for (let n = 1; n <= 9; n++) {
+                        deck.push({ light: { color: lCol, value: n }, dark: { color: dCol, value: n } });
+                        deck.push({ light: { color: lCol, value: n }, dark: { color: dCol, value: n } });
+                    }
+                    lightSpecials.forEach((sp, sIdx) => {
+                        deck.push({ light: { color: lCol, value: sp }, dark: { color: dCol, value: darkSpecials[sIdx] } });
+                        deck.push({ light: { color: lCol, value: sp }, dark: { color: dCol, value: darkSpecials[sIdx] } });
+                    });
+                }
+                for (let w = 0; w < 4; w++) {
+                    deck.push({ light: { color: 'wild', value: 'wild' }, dark: { color: 'wild', value: 'wild' } });
+                    deck.push({ light: { color: 'wild', value: 'draw2' }, dark: { color: 'wild', value: 'wild_draw_color' } });
+                }
+            } else {
+                const isNoMercy = state.selectedGame === 'no_mercy';
+                LIGHT_COLORS.forEach(color => {
+                    deck.push({ color, value: 0 });
+                    for (let n = 1; n <= 9; n++) {
+                        deck.push({ color, value: n });
+                        deck.push({ color, value: n });
+                    }
+                    ['skip', 'reverse', 'draw2'].forEach(sp => {
+                        deck.push({ color, value: sp });
+                        deck.push({ color, value: sp });
+                    });
+                    if (isNoMercy) {
+                        deck.push({ color, value: 'discard_all' });
+                        deck.push({ color, value: 'draw6' });
+                    }
+                });
+                for (let w = 0; w < 4; w++) {
+                    deck.push({ color: 'wild', value: 'wild' });
+                    deck.push({ color: 'wild', value: 'wild_draw4' });
+                    if (isNoMercy) {
+                        deck.push({ color: 'wild', value: 'draw6' });
+                        deck.push({ color: 'wild', value: 'draw10' });
+                    }
+                }
+            }
+            return shuffleArray(deck);
+        }
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function getEffectiveUnoCard(card) {
+            if (!card) return null;
+            if (state.selectedGame === 'flip' && card.dark) {
+                return state.flipSide === 'dark' ? card.dark : card.light;
+            }
+            return card;
+        }
+
+        function initUnoGame() {
+            const arena = document.getElementById('tableArena');
+            if (arena) arena.classList.remove('durak-felt');
+            document.body.classList.remove('dark-flip-mode');
+
+            document.getElementById('unoCenterTable').classList.remove('hidden');
+            document.getElementById('durakCenterTable').classList.add('hidden');
+            document.getElementById('tableCenterOverlay').classList.remove('hidden');
+            document.getElementById('btnDurakTake').classList.add('hidden');
+            document.getElementById('btnDurakDone').classList.add('hidden');
+
+            state.deck = buildUnoDeck();
+            state.discardPile = [];
+            state.currentTurnIdx = 0;
+            state.direction = 1;
+            state.stackedPenalty = 0;
+            state.flipSide = 'light';
+            state.unoShouted = false;
+
+            state.players.forEach(p => {
+                p.hand = state.deck.splice(0, 7);
+                p.eliminated = false;
+            });
+
+            let firstCard = state.deck.pop();
+            while (getEffectiveUnoCard(firstCard).color === 'wild') {
+                state.deck.unshift(firstCard);
+                firstCard = state.deck.pop();
+            }
+            state.discardPile.push(firstCard);
+            state.activeColor = getEffectiveUnoCard(firstCard).color;
+
+            addLog('Партия началась! Удачи за столом.');
+            renderUnoTable();
+        }
+
+        function drawFromUnoDeck(count) {
+            const drawn = [];
+            for (let i = 0; i < count; i++) {
+                if (state.deck.length === 0) {
+                    if (state.discardPile.length <= 1) break;
+                    const top = state.discardPile.pop();
+                    state.deck = shuffleArray(state.discardPile);
+                    state.discardPile = [top];
+                }
+                if (state.deck.length > 0) {
+                    drawn.push(state.deck.pop());
+                }
+            }
+            return drawn;
+        }
+
+        function getPenaltyAmount(val) {
+            const map = { draw2: 2, wild_draw4: 4, draw5: 5, draw6: 6, draw10: 10 };
+            return map[val] || 0;
+        }
+
+        function isUnoCardPlayable(card) {
+            const eff = getEffectiveUnoCard(card);
+            const topEff = getEffectiveUnoCard(state.discardPile[state.discardPile.length - 1]);
+            if (!eff || !topEff) return false;
+
+            if (state.stackedPenalty > 0) {
+                if (state.selectedGame === 'no_mercy') {
+                    const myPen = getPenaltyAmount(eff.value);
+                    return myPen > 0 && myPen >= state.stackedPenalty;
+                }
+                return false;
+            }
+
+            if (eff.color === 'wild') return true;
+            if (eff.color === state.activeColor) return true;
+            if (eff.value === topEff.value) return true;
+            return false;
+        }
+
+        function renderUnoTable() {
+            const myIdx = getMyLocalPlayerIndex();
+            const isDark = state.selectedGame === 'flip' && state.flipSide === 'dark';
+
+            if (isDark) {
+                document.body.classList.add('dark-flip-mode');
+                document.getElementById('flipSideBadge').classList.remove('hidden');
+            } else {
+                document.body.classList.remove('dark-flip-mode');
+                document.getElementById('flipSideBadge').classList.add('hidden');
+            }
+
+            document.getElementById('unoDeckCount').innerText = state.deck.length;
+            document.getElementById('unoDrawDeckStack').innerHTML = renderUnoCardBackHTML(isDark);
+
+            const topCard = state.discardPile[state.discardPile.length - 1];
+            document.getElementById('discardPileCard').innerHTML = renderUnoCardHTML(topCard, false);
+
+            // Direction & Active Color Badge
+            document.getElementById('directionText').innerText = state.direction === 1 ? 'По часовой' : 'Против часовой';
+            document.getElementById('directionIcon').className = state.direction === 1
+                ? 'fa-solid fa-rotate-right text-indigo-400'
+                : 'fa-solid fa-rotate-left text-pink-400';
+
+            const colorDotMap = {
+                red: 'bg-[#ED1C24]', blue: 'bg-[#0072BC]', green: 'bg-[#00A651]', yellow: 'bg-[#FFDE00]',
+                pink: 'bg-[#EC008C]', teal: 'bg-[#00B5AD]', orange: 'bg-[#F37021]', purple: 'bg-[#7F3F98]',
+                wild: 'bg-white'
+            };
+            document.getElementById('activeColorDot').className = `w-3 h-3 rounded-full border border-white/60 shadow-sm ${colorDotMap[state.activeColor] || 'bg-white'}`;
+            document.getElementById('activeColorText').innerText = COLOR_NAMES_RU[state.activeColor] || state.activeColor;
+
+            // Penalty Badge
+            const penBadge = document.getElementById('penaltyBadge');
+            if (state.stackedPenalty > 0) {
+                penBadge.classList.remove('hidden');
+                document.getElementById('penaltyValue').innerText = state.stackedPenalty;
+            } else {
+                penBadge.classList.add('hidden');
+            }
+
+            // Render Opponents
+            const oppArea = document.getElementById('opponentsArea');
+            oppArea.innerHTML = '';
+            state.players.forEach((p, idx) => {
+                if (idx === myIdx) return;
+                const isTurn = state.currentTurnIdx === idx && !state.gameOver;
+                const cardBacks = Array(Math.min(p.hand.length, 6)).fill(0).map((_, i) => `
+                    <div class="w-7 h-10 rounded-md overflow-hidden -ml-3 first:ml-0 shadow border border-white/20" style="transform: rotate(${(i - 2) * 5}deg)">
+                        ${renderUnoCardBackHTML(isDark)}
+                    </div>
+                `).join('');
+
+                oppArea.innerHTML += `
+                    <div class="flex flex-col items-center bg-slate-900/80 px-3.5 py-2 rounded-2xl border ${isTurn ? 'border-amber-400 turn-active' : 'border-white/10'} ${p.eliminated ? 'opacity-40' : ''}">
+                        <div class="flex items-center gap-1.5 text-xs font-extrabold text-white">
+                            <span>${p.avatar}</span>
+                            <span>${p.name}</span>
+                            <span class="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">${p.hand.length}</span>
+                        </div>
+                        <div class="flex items-center justify-center mt-1.5 h-10">
+                            ${p.eliminated ? '<span class="text-[10px] text-rose-400 font-bold">Выбыл (25+)</span>' : cardBacks}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Render My Hand
+            const myPlayer = state.players[myIdx];
+            const isMyTurn = state.currentTurnIdx === myIdx && !state.gameOver;
+            const handContainer = document.getElementById('playerHand');
+            handContainer.innerHTML = '';
+
+            if (myPlayer && myPlayer.hand.length === 2 && isMyTurn) {
+                document.getElementById('btnUnoShout').classList.remove('hidden');
+            } else if (myPlayer && myPlayer.hand.length > 2) {
+                document.getElementById('btnUnoShout').classList.add('hidden');
+            }
+
+            myPlayer.hand.forEach((card, idx) => {
+                const canPlay = isMyTurn && isUnoCardPlayable(card);
+                const total = myPlayer.hand.length;
+                const angle = total > 1 ? ((idx - (total - 1) / 2) * Math.min(3.5, 36 / total)) : 0;
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `playing-card w-20 h-28 sm:w-24 sm:h-34 rounded-xl relative ${canPlay ? 'playable ring-2 ring-amber-400/80 -translate-y-2' : 'opacity-85'}`;
+                cardDiv.style.transform = `rotate(${angle}deg)`;
+                cardDiv.innerHTML = renderUnoCardHTML(card, false);
+                if (canPlay) {
+                    cardDiv.onclick = () => playerPlayUnoCard(idx);
+                }
+                handContainer.appendChild(cardDiv);
+            });
+
+            if (handContainer.scrollWidth > handContainer.clientWidth) {
+                handContainer.scrollLeft = handContainer.scrollWidth;
+            }
+
+            // Status text
+            const statusEl = document.getElementById('statusText');
+            if (state.gameOver) {
+                statusEl.innerText = 'Игра окончена!';
+            } else if (isMyTurn) {
+                statusEl.innerText = state.stackedPenalty > 0
+                    ? `На вас висит штраф +${state.stackedPenalty}! Отбейтесь или возьмите карты.`
+                    : 'Ваш ход! Выберите карту или возьмите из колоды.';
+            } else {
+                const curP = state.players[state.currentTurnIdx];
+                statusEl.innerText = `Ходит ${curP ? curP.name : 'соперник'}...`;
+            }
+        }
+
+        function shoutUno() {
+            state.unoShouted = true;
+            playSound('uno');
+            showToast('Вы крикнули UNO!');
+            document.getElementById('btnUnoShout').classList.add('hidden');
+        }
+
+        function playerDrawCard() {
+            const myIdx = getMyLocalPlayerIndex();
+            if (state.gameOver || state.currentTurnIdx !== myIdx) return;
+
+            const drawCount = state.stackedPenalty > 0 ? state.stackedPenalty : 1;
+            const drawn = drawFromUnoDeck(drawCount);
+            state.players[myIdx].hand.push(...drawn);
+            playSound('draw');
+
+            if (state.stackedPenalty > 0) {
+                addLog(`<b>${state.players[myIdx].name}</b> взял(а) штрафные <b>${drawCount}</b> карт.`);
+                state.stackedPenalty = 0;
+            } else {
+                addLog(`<b>${state.players[myIdx].name}</b> взял(а) карту из колоды.`);
+            }
+
+            checkNoMercyElimination(myIdx);
+
+            advanceUnoTurn(1);
+            renderUnoTable();
+            afterUnoAction();
+        }
+
+        function playerPlayUnoCard(cardIdx) {
+            const myIdx = getMyLocalPlayerIndex();
+            if (state.gameOver || state.currentTurnIdx !== myIdx) return;
+
+            const card = state.players[myIdx].hand[cardIdx];
+            if (!isUnoCardPlayable(card)) return;
+
+            const eff = getEffectiveUnoCard(card);
+            state.players[myIdx].hand.splice(cardIdx, 1);
+            state.discardPile.push(card);
+
+            // Check UNO shout penalty
+            if (state.players[myIdx].hand.length === 1 && !state.unoShouted) {
+                const pen = drawFromUnoDeck(2);
+                state.players[myIdx].hand.push(...pen);
+                addLog(`<span class="text-rose-400">Забыли нажать UNO! +2 штрафные карты.</span>`);
+            }
+            if (state.players[myIdx].hand.length > 1) {
+                state.unoShouted = false;
+            }
+
+            if (eff.color === 'wild') {
+                state.pendingWildCard = card;
+                openColorPickerModal();
+                return;
+            }
+
+            if (state.selectedGame === 'no_mercy' && eff.value === 7 && state.players.filter(p => !p.eliminated).length > 1) {
+                state.pendingSwapCard = card;
+                openSwapPickerModal(myIdx);
+                return;
+            }
+
+            resolveUnoCardEffect(myIdx, card, eff.color);
+        }
+
+        function openColorPickerModal() {
+            const isDark = state.selectedGame === 'flip' && state.flipSide === 'dark';
+            const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
+            const btnStyles = {
+                red: 'bg-[#ED1C24] hover:brightness-110',
+                blue: 'bg-[#0072BC] hover:brightness-110',
+                green: 'bg-[#00A651] hover:brightness-110',
+                yellow: 'bg-[#FFDE00] text-slate-950 hover:brightness-110',
+                pink: 'bg-[#EC008C] hover:brightness-110',
+                teal: 'bg-[#00B5AD] hover:brightness-110',
+                orange: 'bg-[#F37021] hover:brightness-110',
+                purple: 'bg-[#7F3F98] hover:brightness-110'
+            };
+
+            const grid = document.getElementById('colorPickerGrid');
+            grid.innerHTML = colors.map(c => `
+                <button onclick="chooseWildColor('${c}')" class="py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white shadow-lg transition transform hover:scale-105 ${btnStyles[c]}">
+                    ${COLOR_NAMES_RU[c]}
+                </button>
+            `).join('');
+
+            document.getElementById('colorPickerModal').classList.remove('hidden');
+        }
+
+        function chooseWildColor(chosenColor) {
+            document.getElementById('colorPickerModal').classList.add('hidden');
+            const myIdx = getMyLocalPlayerIndex();
+            const card = state.pendingWildCard;
+            state.pendingWildCard = null;
+            resolveUnoCardEffect(myIdx, card, chosenColor);
+        }
+
+        function openSwapPickerModal(myIdx) {
+            const list = document.getElementById('swapPickerList');
+            list.innerHTML = '';
+            state.players.forEach((p, idx) => {
+                if (idx === myIdx || p.eliminated) return;
+                list.innerHTML += `
+                    <button onclick="chooseSwapTarget(${idx})" class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-indigo-600 text-white font-bold text-xs flex items-center justify-between transition">
+                        <span>${p.avatar} ${p.name}</span>
+                        <span class="bg-slate-950 px-2.5 py-1 rounded-full">${p.hand.length} карт</span>
+                    </button>
+                `;
+            });
+            document.getElementById('swapPickerModal').classList.remove('hidden');
+        }
+
+        function chooseSwapTarget(targetIdx) {
+            document.getElementById('swapPickerModal').classList.add('hidden');
+            const myIdx = getMyLocalPlayerIndex();
+            const temp = state.players[myIdx].hand;
+            state.players[myIdx].hand = state.players[targetIdx].hand;
+            state.players[targetIdx].hand = temp;
+            addLog(`<b>${state.players[myIdx].name}</b> обменялся картами с <b>${state.players[targetIdx].name}</b>!`);
+            const card = state.pendingSwapCard;
+            state.pendingSwapCard = null;
+            resolveUnoCardEffect(myIdx, card, getEffectiveUnoCard(card).color, true);
+        }
+
+        function resolveUnoCardEffect(actorIdx, card, chosenColor, skipSwap = false) {
+            const eff = getEffectiveUnoCard(card);
+            state.activeColor = chosenColor;
+            let stepCount = 1;
+
+            playSound(typeof eff.value === 'number' ? 'card' : 'special');
+            addLog(`<b>${state.players[actorIdx].name}</b> сыграл(а): <b>${COLOR_NAMES_RU[chosenColor]} ${getUnoSymbolLabel(eff.value)}</b>`);
+
+            if (eff.value === 'reverse') {
+                if (state.players.filter(p => !p.eliminated).length === 2) {
+                    stepCount = 2;
+                } else {
+                    state.direction *= -1;
+                }
+            } else if (eff.value === 'skip') {
+                stepCount = 2;
+            } else if (eff.value === 'skip_all') {
+                stepCount = 0;
+            } else if (eff.value === 'flip') {
+                state.flipSide = state.flipSide === 'light' ? 'dark' : 'light';
+                const newTop = getEffectiveUnoCard(card);
+                state.activeColor = newTop.color === 'wild' ? (state.flipSide === 'dark' ? 'purple' : 'red') : newTop.color;
+                addLog(`<span class="text-purple-400 font-bold">FLIP! Стол перевернулся на ${state.flipSide === 'dark' ? 'Тёмную' : 'Светлую'} сторону!</span>`);
+            } else if (eff.value === 'discard_all') {
+                const sameColorCards = state.players[actorIdx].hand.filter(c => getEffectiveUnoCard(c).color === chosenColor);
+                state.players[actorIdx].hand = state.players[actorIdx].hand.filter(c => getEffectiveUnoCard(c).color !== chosenColor);
+                state.discardPile.push(...sameColorCards);
+                addLog(`Сброшены все карты цвета <b>${COLOR_NAMES_RU[chosenColor]}</b> (${sameColorCards.length} шт.)!`);
+            } else if (getPenaltyAmount(eff.value) > 0) {
+                const pen = getPenaltyAmount(eff.value);
+                state.stackedPenalty += pen;
+                addLog(`<span class="text-rose-400 font-bold">+${pen}! На стол висит штраф ${state.stackedPenalty}.</span>`);
+                stepCount = 1;
+            } else if (eff.value === 0 && state.selectedGame === 'no_mercy') {
+                // Сбросить карты с наименьшим штрафом
+                const playableCards = state.players[actorIdx].hand.filter(c => isUnoCardPlayable(c));
+                if (playableCards.length > 0) {
+                    const minPenaltyCard = playableCards.reduce((minCard, card) => {
+                        const cardPenalty = getPenaltyAmount(getEffectiveUnoCard(card).value);
+                        const minPenalty = getPenaltyAmount(getEffectiveUnoCard(minCard).value);
+                        return cardPenalty < minPenalty ? card : minCard;
+                    });
+                    const minColor = getEffectiveUnoCard(minPenaltyCard).color;
+                    const sameColorCards = state.players[actorIdx].hand.filter(c => getEffectiveUnoCard(c).color === minColor);
+                    state.players[actorIdx].hand = state.players[actorIdx].hand.filter(c => getEffectiveUnoCard(c).color !== minColor);
+                    state.discardPile.push(...sameColorCards);
+                    addLog(`<b>${state.players[actorIdx].name}</b> сбросил(а) карты цвета <b>${COLOR_NAMES_RU[minColor]}</b> с наименьшим штрафом.`);
+                }
+            }
+
+            if (stepCount > 0) {
+                advanceUnoTurn(stepCount);
+            }
+            renderUnoTable();
+            afterUnoAction();
+        }
+
+        function nextAliveIndex(fromIdx, dir) {
+            const n = state.players.length;
+            if (n === 0) return 0;
+            const step = dir < 0 ? -1 : 1;
+            let i = ((fromIdx % n) + n) % n;
+            for (let c = 0; c < n; c++) {
+                i = (i + step + n) % n;
+                if (!state.players[i].eliminated) return i;
+            }
+            return fromIdx;
+        }
+
+        function updateTurnStatus() {
+            const statusEl = document.getElementById('statusText');
+            if (!statusEl) return;
+            if (state.gameOver) { statusEl.innerText = 'Игра окончена!'; return; }
+            if (state.currentTurnIdx === getMyLocalPlayerIndex()) {
+                statusEl.innerText = state.stackedPenalty > 0
+                    ? `На вас висит штраф +${state.stackedPenalty}! Отбейтесь или возьмите карты.`
+                    : 'Ваш ход! Выберите карту или возьмите из колоды.';
+            } else {
+                const curP = state.players[state.currentTurnIdx];
+                statusEl.innerText = `Ходит ${curP ? curP.name : 'соперник'}...`;
+            }
+        }
+
+        function advanceUnoTurn(steps = 1) {
+            let idx = state.currentTurnIdx;
+            for (let s = 0; s < steps; s++) idx = nextAliveIndex(idx, state.direction);
+            state.currentTurnIdx = idx;
+            updateTurnStatus();
+        }
+
+        /* ================= WIN / GAME OVER ================= */
+        function endGame(winnerIdx) {
+            state.gameOver = true;
+            state.winnerIdx = winnerIdx;
+            clearTimeout(state.aiTimeout);
+            showGameOverModal();
+            if (!state.pvpResultRecorded) {
+                state.pvpResultRecorded = true;
+                recordMatchOutcome(winnerIdx === getMyLocalPlayerIndex());
+            }
+            syncPvpStateToCloud();
+            updateTurnStatus();
+        }
+
+        function showGameOverModal() {
+            const winnerIdx = state.winnerIdx;
+            const myIdx = getMyLocalPlayerIndex();
+            const iWon = winnerIdx === myIdx;
+            const winner = state.players[winnerIdx];
+            document.getElementById('gameResultIcon').innerText = iWon ? '🏆' : '😵';
+            document.getElementById('gameResultTitle').innerText = iWon ? 'Победа!' : 'Поражение';
+            document.getElementById('gameResultSubtitle').innerText = iWon
+                ? 'Вы отлично сыграли данную партию!'
+                : `Партию забирает ${winner ? winner.name : 'соперник'}.`;
+            document.getElementById('rankingsList').innerHTML = state.players.map(p => `
+                <div class="flex items-center justify-between bg-slate-900/60 rounded-lg px-2.5 py-1.5">
+                    <span class="font-bold text-slate-200">${p.avatar} ${p.name}</span>
+                    <span class="text-slate-400">${p.hand.length} карт${p.eliminated ? ' · выбыл' : ''}</span>
+                </div>`).join('');
+            document.getElementById('gameOverModal').classList.remove('hidden');
+            playSound(iWon ? 'win' : 'special');
+        }
+
+        function checkUnoWinner() {
+            if (state.gameOver) return true;
+            const winnerIdx = state.players.findIndex(p => !p.eliminated && p.hand.length === 0);
+            if (winnerIdx !== -1) { endGame(winnerIdx); return true; }
+            return false;
+        }
+
+        /* ================= AI OPPONENTS (UNO) ================= */
+        function aiDelay() {
+            if (state.difficulty === 'easy') return 1200;
+            if (state.difficulty === 'hard') return 550;
+            return 850;
+        }
+
+        function maybeRunAiTurn() {
+            clearTimeout(state.aiTimeout);
+            if (state.gameOver) return;
+            const cur = state.players[state.currentTurnIdx];
+            if (!cur || cur.isHuman || cur.eliminated) return;
+            state.aiTimeout = setTimeout(runAiTurn, aiDelay());
+        }
+
+        function afterUnoAction() {
+            if (checkUnoWinner()) return;
+            renderUnoTable();
+            maybeRunAiTurn();
+            syncPvpStateToCloud();
+        }
+
+        function mostCommonColor(hand) {
+            const counts = {};
+            hand.forEach(c => {
+                const eff = getEffectiveUnoCard(c);
+                if (eff && eff.color !== 'wild') counts[eff.color] = (counts[eff.color] || 0) + 1;
+            });
+            let best = null, bestN = -1;
+            Object.keys(counts).forEach(k => { if (counts[k] > bestN) { bestN = counts[k]; best = k; } });
+            if (!best) {
+                const palette = (state.selectedGame === 'flip' && state.flipSide === 'dark') ? DARK_COLORS : LIGHT_COLORS;
+                best = palette[Math.floor(Math.random() * palette.length)];
+            }
+            return best;
+        }
+
+        function chooseAiCard(p, options) {
+            const ranked = options.map(o => {
+                const eff = getEffectiveUnoCard(o.card);
+                let score;
+                if (eff.color === 'wild') {
+                    score = -50;
+                } else {
+                    const sameColor = p.hand.filter(c => getEffectiveUnoCard(c).color === eff.color).length;
+                    score = sameColor * 2 + (typeof eff.value === 'number' ? 1 : 3);
+                }
+                return { i: o.i, eff, score };
+            });
+            ranked.sort((a, b) => b.score - a.score);
+            let pick = ranked[0];
+            if (state.difficulty === 'easy' && ranked.length > 1 && Math.random() < 0.5) {
+                pick = ranked[Math.floor(Math.random() * ranked.length)];
+            }
+            const color = pick.eff.color === 'wild' ? mostCommonColor(p.hand) : pick.eff.color;
+            return { i: pick.i, color };
+        }
+
+        function aiPlayCard(playerIdx, cardIdx, chosenColor) {
+            const p = state.players[playerIdx];
+            if (!p) { afterUnoAction(); return; }
+            const card = p.hand[cardIdx];
+            if (!card) { afterUnoAction(); return; }
+            const eff = getEffectiveUnoCard(card);
+
+            p.hand.splice(cardIdx, 1);
+            state.discardPile.push(card);
+            playSound('card');
+
+            if (p.hand.length === 1) {
+                addLog(`<b>${p.name}</b> кричит(т) UNO!`);
+                playSound('uno');
+            }
+
+            if (eff.color === 'wild') {
+                resolveUnoCardEffect(playerIdx, card, chosenColor || mostCommonColor(p.hand));
+                return;
+            }
+
+            if (state.selectedGame === 'no_mercy' && eff.value === 7 && state.players.filter(x => !x.eliminated).length > 1) {
+                const targets = state.players.map((x, i) => ({ x, i }))
+                    .filter(o => o.i !== playerIdx && !o.x.eliminated)
+                    .sort((a, b) => b.x.hand.length - a.x.hand.length);
+                if (targets.length) {
+                    const t = targets[0].i;
+                    const tmp = p.hand;
+                    p.hand = state.players[t].hand;
+                    state.players[t].hand = tmp;
+                    addLog(`<b>${p.name}</b> меняется руками с <b>${state.players[t].name}</b>!`);
+                    resolveUnoCardEffect(playerIdx, card, eff.color, true);
+                    return;
+                }
+            }
+
+            resolveUnoCardEffect(playerIdx, card, eff.color);
+        }
+
+        function runAiTurn() {
+            if (state.gameOver) return;
+            const idx = state.currentTurnIdx;
+            const p = state.players[idx];
+            if (!p || p.isHuman || p.eliminated) { return; }
+
+            const options = [];
+            p.hand.forEach((card, i) => { if (isUnoCardPlayable(card)) options.push({ card, i }); });
+
+            if (options.length === 0) {
+                const drawCount = state.stackedPenalty > 0 ? state.stackedPenalty : 1;
+                const drawn = drawFromUnoDeck(drawCount);
+                p.hand.push(...drawn);
+                playSound('draw');
+                if (state.stackedPenalty > 0) {
+                    addLog(`<b>${p.name}</b> берёт штрафные <b>${drawCount}</b> карт.`);
+                    state.stackedPenalty = 0;
+                } else {
+                    addLog(`<b>${p.name}</b> берёт карту из колоды.`);
+                }
+
+                if (checkNoMercyElimination(idx)) { advanceUnoTurn(1); afterUnoAction(); return; }
+
+                const playableNow = [];
+                p.hand.forEach((card, i) => { if (isUnoCardPlayable(card)) playableNow.push({ card, i }); });
+
+                if (state.difficulty === 'easy' || playableNow.length === 0) {
+                    advanceUnoTurn(1);
+                    afterUnoAction();
+                    return;
+                }
+                const pick = chooseAiCard(p, playableNow);
+                aiPlayCard(idx, pick.i, pick.color);
+                return;
+            }
+
+            const pick = chooseAiCard(p, options);
+            aiPlayCard(idx, pick.i, pick.color);
+        }
+
+        function checkNoMercyElimination(playerIdx) {
+            if (state.selectedGame !== 'no_mercy') return false;
+            const player = state.players[playerIdx];
+            if (!player || player.eliminated) return false;
+
+            const penaltySum = player.hand.reduce((sum, card) => {
+                return sum + getPenaltyAmount(getEffectiveUnoCard(card).value);
+            }, 0);
+
+            if (penaltySum >= 25) {
+                player.eliminated = true;
+                addLog(`<b>${player.name}</b> выбывает из игры (25+ карт на руке)!`);
+                renderUnoTable();
+                return true;
+            }
+            return false;
+        }
+
+        /* ================= DURAK ENGINE ================= */
+        function buildDurakDeck() {
+            const ranks = [6, 7, 8, 9, 10, 11, 12, 13, 14]; // 6-10, В, Д, К, Т
+            const suits = ['♠', '♥', '♦', '♣'];
+            const deck = [];
+
+            suits.forEach(suit => {
+                ranks.forEach(rank => {
+                    deck.push({ suit, rank });
+                });
+            });
+            return shuffleArray(deck);
+        }
+
+        function initDurakGame() {
+            const arena = document.getElementById('tableArena');
+            if (arena) arena.classList.add('durak-felt');
+            document.body.classList.remove('dark-flip-mode');
+            document.getElementById('flipSideBadge').classList.add('hidden');
+
+            document.getElementById('unoCenterTable').classList.add('hidden');
+            document.getElementById('durakCenterTable').classList.remove('hidden');
+            document.getElementById('tableCenterOverlay').classList.add('hidden');
+            document.getElementById('btnUnoShout').classList.add('hidden');
+            document.getElementById('btnDurakTake').classList.remove('hidden');
+            document.getElementById('btnDurakDone').classList.remove('hidden');
+
+            state.deck = buildDurakDeck();
+            state.discardPile = [];
+            state.currentTurnIdx = 0;
+            state.direction = 1;
+            state.stackedPenalty = 0;
+            state.flipSide = 'light';
+            state.unoShouted = false;
+            state.durakPairs = [];
+            state.durakAttackerIdx = 0;
+            state.durakDefenderIdx = 1;
+            state.durakTrumpCard = null;
+            state.durakTrumpSuit = null;
+
+            state.players.forEach(p => {
+                p.hand = state.deck.splice(0, 6);
+                p.eliminated = false;
+            });
+
+            const trumpCard = state.deck[state.deck.length - 1];
+            state.durakTrumpCard = trumpCard;
+            state.durakTrumpSuit = trumpCard.suit;
+
+            addLog(`Партия в Дурака началась! Козырь: <b>${state.durakTrumpSuit}</b>`);
+            startDurakBout(0);
+        }
+
+        function startDurakBout(attackerIdx) {
+            const n = state.players.length;
+            state.durakPairs = [];
+            state.durakAttackerIdx = attackerIdx;
+            let d = (attackerIdx + 1) % n;
+            let guard = 0;
+            while (d !== attackerIdx && state.players[d].hand.length === 0 && state.deck.length === 0 && guard < n) {
+                d = (d + 1) % n;
+                guard++;
+            }
+            state.durakDefenderIdx = d;
+            addLog(`<span class="text-amber-300">Атакует <b>${state.players[attackerIdx].name}</b>, защищается <b>${state.players[d].name}</b>.</span>`);
+            durakSetTurn(attackerIdx);
+        }
+
+        function durakSetTurn(idx) {
+            state.currentTurnIdx = idx;
+            renderDurakTable();
+            updateDurakStatus();
+            maybeRunDurakAi();
+            syncPvpStateToCloud();
+        }
+
+        function updateDurakStatus() {
+            const el = document.getElementById('statusText');
+            if (!el) return;
+            if (state.gameOver) { el.innerText = 'Игра окончена!'; return; }
+            const myIdx = getMyLocalPlayerIndex();
+            if (state.currentTurnIdx === myIdx) {
+                if (state.durakAttackerIdx === myIdx) {
+                    const undefended = state.durakPairs.some(p => !p.defend);
+                    el.innerText = state.durakPairs.length === 0
+                        ? 'Ваш ход! Атакуйте картой.'
+                        : (undefended ? 'Соперник должен отбиться...' : 'Добавьте карту или нажмите «Бита».');
+                } else {
+                    el.innerText = 'Ваш ход! Отбейтесь картой или возьмите карты.';
+                }
+            } else {
+                const curP = state.players[state.currentTurnIdx];
+                el.innerText = `Ходит ${curP ? curP.name : 'соперник'}...`;
+            }
+        }
+
+        function maybeRunDurakAi() {
+            clearTimeout(state.aiTimeout);
+            if (state.gameOver) return;
+            const cur = state.players[state.currentTurnIdx];
+            if (!cur || cur.isHuman) return;
+            state.aiTimeout = setTimeout(runDurakAi, aiDelay());
+        }
+
+        function durakCardWeight(card) {
+            const trump = card.suit === state.durakTrumpSuit;
+            return (trump ? 100 : 0) + card.rank;
+        }
+
+        function durakTableRanks() {
+            const ranks = [];
+            state.durakPairs.forEach(pair => {
+                ranks.push(pair.attack.rank);
+                if (pair.defend) ranks.push(pair.defend.rank);
+            });
+            return ranks;
+        }
+
+        function durakTableCards() {
+            const cards = [];
+            state.durakPairs.forEach(pair => {
+                cards.push(pair.attack);
+                if (pair.defend) cards.push(pair.defend);
+            });
+            return cards;
+        }
+
+        function durakBeats(defCard, atkCard) {
+            if (!defCard || !atkCard) return false;
+            if (defCard.suit === atkCard.suit) return defCard.rank > atkCard.rank;
+            return defCard.suit === state.durakTrumpSuit && atkCard.suit !== state.durakTrumpSuit;
+        }
+
+        function runDurakAi() {
+            if (state.gameOver) return;
+            const idx = state.currentTurnIdx;
+            const p = state.players[idx];
+            if (!p || p.isHuman) return;
+
+            const undefended = state.durakPairs.find(pair => !pair.defend);
+
+            if (idx === state.durakDefenderIdx && undefended) {
+                const options = [];
+                p.hand.forEach((card, i) => { if (durakBeats(card, undefended.attack)) options.push({ card, i }); });
+                if (options.length === 0) { durakTakeCards(); return; }
+                options.sort((a, b) => durakCardWeight(a.card) - durakCardWeight(b.card));
+                let pick = options[0];
+                if (state.difficulty === 'easy' && Math.random() < 0.2) {
+                    pick = options[Math.floor(Math.random() * options.length)];
+                }
+                durakDefendWith(idx, pick.i);
+                return;
+            }
+
+            const tableRanks = durakTableRanks();
+            const options = [];
+            p.hand.forEach((card, i) => {
+                if (state.durakPairs.length === 0 || tableRanks.includes(card.rank)) options.push({ card, i });
+            });
+
+            if (options.length === 0 || state.durakPairs.length >= 6) { durakPassBita(); return; }
+
+            options.sort((a, b) => durakCardWeight(a.card) - durakCardWeight(b.card));
+            let pick = options[0];
+            if (state.difficulty === 'easy' && options.length > 1 && Math.random() < 0.4) {
+                pick = options[Math.floor(Math.random() * options.length)];
+            }
+            durakAttackWith(idx, pick.i);
+        }
+
+        function durakAttackWith(idx, cardIdx) {
+            const p = state.players[idx];
+            if (!p) return;
+            const card = p.hand[cardIdx];
+            if (!card) { durakSetTurn(state.durakDefenderIdx); return; }
+
+            const tableRanks = durakTableRanks();
+            if (state.durakPairs.length > 0 && !tableRanks.includes(card.rank)) {
+                if (p.isHuman) showToast('Ходить можно только рангами, которые есть на столе.');
+                else durakPassBita();
+                return;
+            }
+
+            p.hand.splice(cardIdx, 1);
+            state.durakPairs.push({ attack: card, defend: null });
+            playSound('card');
+            addLog(`<b>${p.name}</b> атакует: <b>${getDurakRankLabel(card.rank)}${card.suit}</b>`);
+            durakSetTurn(state.durakDefenderIdx);
+        }
+
+        function durakDefendWith(idx, cardIdx) {
+            const p = state.players[idx];
+            if (!p) return;
+            const card = p.hand[cardIdx];
+            const pair = state.durakPairs.find(x => !x.defend);
+            if (!card || !pair) { durakAfterMove(); return; }
+
+            if (!durakBeats(card, pair.attack)) {
+                if (p.isHuman) showToast('Эта карта не бьёт атакующую.');
+                else durakTakeCards();
+                return;
+            }
+
+            p.hand.splice(cardIdx, 1);
+            pair.defend = card;
+            playSound('card');
+            addLog(`<b>${p.name}</b> отбивается: <b>${getDurakRankLabel(card.rank)}${card.suit}</b>`);
+            durakAfterMove();
+        }
+
+        function durakAfterMove() {
+            const undefended = state.durakPairs.some(p => !p.defend);
+            if (undefended) { durakSetTurn(state.durakDefenderIdx); return; }
+            if (state.players[state.durakAttackerIdx].hand.length === 0 && state.durakPairs.length > 0) {
+                durakPassBita();
+                return;
+            }
+            durakSetTurn(state.durakAttackerIdx);
+        }
+
+        function endDurakBout(defenderTook) {
+            state.durakPairs = [];
+            durakRefillHands();
+            if (durakCheckEnd()) return;
+
+            const n = state.players.length;
+            let next = defenderTook
+                ? (state.durakDefenderIdx + 1) % n
+                : (state.durakAttackerIdx + 1) % n;
+
+            let guard = 0;
+            while (state.deck.length === 0 && state.players[next].hand.length === 0 && guard < n) {
+                next = (next + 1) % n;
+                guard++;
+            }
+            if (state.players[next].hand.length === 0 && state.deck.length > 0) next = state.durakAttackerIdx;
+
+            startDurakBout(next);
+        }
+
+        function durakRefillHands() {
+            const n = state.players.length;
+            const order = [];
+            for (let c = 0; c < n; c++) {
+                const idx = (state.durakAttackerIdx + c) % n;
+                if (idx !== state.durakDefenderIdx) order.push(idx);
+            }
+            order.push(state.durakDefenderIdx);
+
+            order.forEach(idx => {
+                const need = 6 - state.players[idx].hand.length;
+                for (let k = 0; k < need; k++) {
+                    if (state.deck.length === 0) break;
+                    state.players[idx].hand.push(state.deck.pop());
+                }
+            });
+        }
+
+        function durakCheckEnd() {
+            if (state.deck.length > 0) return false;
+            const withCards = state.players.map((p, i) => ({ p, i })).filter(o => o.p.hand.length > 0);
+            if (withCards.length > 1) return false;
+
+            const myIdx = getMyLocalPlayerIndex();
+            let winnerIdx;
+            if (withCards.length === 0) {
+                winnerIdx = myIdx;
+            } else {
+                const loserIdx = withCards[0].i;
+                winnerIdx = loserIdx !== myIdx ? myIdx : state.players.findIndex((p, i) => i !== loserIdx);
+            }
+            if (withCards.length === 1) {
+                addLog(`<b>${state.players[withCards[0].i].name}</b> остаётся с картами — это дурак!`);
+            }
+            endGame(winnerIdx);
+            return true;
+        }
+
+        function renderDurakTable() {
+            const myIdx = getMyLocalPlayerIndex();
+            const isMyTurn = state.currentTurnIdx === myIdx && !state.gameOver;
+            const iAmAttacker = state.durakAttackerIdx === myIdx;
+            const iAmDefender = state.durakDefenderIdx === myIdx;
+            const tableRanks = durakTableRanks();
+            const undefendedPair = state.durakPairs.find(p => !p.defend);
+
+            const canPlayCard = (card) => {
+                if (!isMyTurn) return false;
+                if (iAmAttacker && state.durakPairs.length < 6) {
+                    return state.durakPairs.length === 0 || tableRanks.includes(card.rank);
+                }
+                if (iAmDefender && undefendedPair) return durakBeats(card, undefendedPair.attack);
+                return false;
+            };
+
+            // Deck + trump
+            const deckCount = document.getElementById('durakDeckCount');
+            if (deckCount) deckCount.innerText = state.deck.length;
+            const trumpSlot = document.getElementById('durakTrumpCardSlot');
+            if (trumpSlot) trumpSlot.innerHTML = state.durakTrumpCard ? renderDurakCardHTML(state.durakTrumpCard) : '';
+            const deckStack = document.getElementById('durakDeckStack');
+            if (deckStack) {
+                deckStack.innerHTML = state.deck.length > 0
+                    ? renderDurakCardBackHTML()
+                    : '<div class="w-full h-full rounded-xl border-2 border-dashed border-white/15 flex items-center justify-center text-[10px] text-slate-500 font-bold">пусто</div>';
+            }
+
+            // Battle pairs
+            const pairsContainer = document.getElementById('durakPairsContainer');
+            if (pairsContainer) {
+                if (state.durakPairs.length === 0) {
+                    pairsContainer.innerHTML = '<div class="text-[11px] text-slate-400 font-bold">Стол пуст — атакуйте первым</div>';
+                } else {
+                    pairsContainer.innerHTML = state.durakPairs.map(pair => `
+                        <div class="flex items-center">
+                            <div class="w-14 h-20 sm:w-16 sm:h-24 rounded-xl shadow-lg relative z-10">${renderDurakCardHTML(pair.attack)}</div>
+                            ${pair.defend
+                                ? `<div class="w-14 h-20 sm:w-16 sm:h-24 rounded-xl shadow-lg -ml-5 mt-4 relative z-20">${renderDurakCardHTML(pair.defend)}</div>`
+                                : `<div class="w-14 h-20 sm:w-16 sm:h-24 rounded-xl border-2 border-dashed border-white/25 -ml-5 mt-4"></div>`}
+                        </div>`).join('');
+                }
+            }
+
+            // Opponents
+            const oppArea = document.getElementById('opponentsArea');
+            oppArea.innerHTML = '';
+            state.players.forEach((p, idx) => {
+                if (idx === myIdx) return;
+                const isTurn = state.currentTurnIdx === idx && !state.gameOver;
+                const cardBacks = Array(Math.min(p.hand.length, 6)).fill(0).map((_, i) => `
+                    <div class="w-7 h-10 rounded-md overflow-hidden -ml-3 first:ml-0 shadow border border-white/20" style="transform: rotate(${(i - 2) * 5}deg)">
+                        ${renderDurakCardBackHTML()}
+                    </div>
+                `).join('');
+
+                const role = idx === state.durakAttackerIdx ? 'атакует' : (idx === state.durakDefenderIdx ? 'защищается' : '');
+                oppArea.innerHTML += `
+                    <div class="flex flex-col items-center bg-slate-900/80 px-3.5 py-2 rounded-2xl border ${isTurn ? 'border-amber-400 turn-active' : 'border-white/10'}">
+                        <div class="flex items-center gap-1.5 text-xs font-extrabold text-white">
+                            <span>${p.avatar}</span>
+                            <span>${p.name}</span>
+                            <span class="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">${p.hand.length}</span>
+                        </div>
+                        <div class="flex items-center justify-center mt-1.5 h-10">${cardBacks}</div>
+                        ${role ? `<span class="text-[9px] font-bold text-amber-300/80 mt-0.5 uppercase tracking-wide">${role}</span>` : ''}
+                    </div>
+                `;
+            });
+
+            // My hand
+            const myPlayer = state.players[myIdx];
+            const handContainer = document.getElementById('playerHand');
+            handContainer.innerHTML = '';
+            if (myPlayer) {
+                myPlayer.hand.forEach((card, idx) => {
+                    const canPlay = canPlayCard(card);
+                    const total = myPlayer.hand.length;
+                    const angle = total > 1 ? ((idx - (total - 1) / 2) * Math.min(3.5, 36 / total)) : 0;
+
+                    const cardDiv = document.createElement('div');
+                    cardDiv.className = `playing-card w-20 h-28 sm:w-24 sm:h-34 rounded-xl relative ${canPlay ? 'playable ring-2 ring-amber-400/80 -translate-y-2' : 'opacity-85'}`;
+                    cardDiv.style.transform = `rotate(${angle}deg)`;
+                    cardDiv.innerHTML = renderDurakCardHTML(card);
+                    if (canPlay) {
+                        cardDiv.onclick = () => {
+                            if (iAmDefender && undefendedPair) durakDefendWith(myIdx, idx);
+                            else durakAttackWith(myIdx, idx);
+                        };
+                    }
+                    handContainer.appendChild(cardDiv);
+                });
+            }
+
+            if (handContainer.scrollWidth > handContainer.clientWidth) {
+                handContainer.scrollLeft = handContainer.scrollWidth;
+            }
+
+            // Action buttons
+            const btnTake = document.getElementById('btnDurakTake');
+            const btnDone = document.getElementById('btnDurakDone');
+            if (btnTake) btnTake.classList.toggle('hidden', !(isMyTurn && iAmDefender));
+            if (btnDone) btnDone.classList.toggle('hidden', !(isMyTurn && iAmAttacker && state.durakPairs.length > 0 && !undefendedPair));
+
+            updateDurakStatus();
+        }
+
+        function playerDrawDurak() {
+            showToast('В Дураке карты берутся со стола или после отбоя.');
+        }
+
+        function durakTakeCards() {
+            if (state.gameOver) return;
+            if (state.currentTurnIdx !== state.durakDefenderIdx) {
+                showToast('Карты забирает только защищающийся.');
+                return;
+            }
+            const defender = state.players[state.durakDefenderIdx];
+            const taken = durakTableCards();
+            if (taken.length === 0) { durakPassBita(); return; }
+
+            defender.hand.push(...taken);
+            playSound('draw');
+            addLog(`<b>${defender.name}</b> забирает карты со стола (${taken.length} шт.).`);
+            endDurakBout(true);
+        }
+
+        function durakPassBita() {
+            if (state.gameOver) return;
+            if (state.currentTurnIdx !== state.durakAttackerIdx) {
+                showToast('«Бита» говорит атакующий.');
+                return;
+            }
+            if (state.durakPairs.length === 0) {
+                showToast('Стол пуст — сначала атакуйте.');
+                return;
+            }
+            if (state.durakPairs.some(p => !p.defend)) {
+                showToast('Сначала дождитесь, пока соперник отобьётся.');
+                return;
+            }
+            addLog('<span class="text-emerald-300">Бита! Карты со стола уходят в отбой.</span>');
+            state.discardPile.push(...durakTableCards());
+            playSound('card');
+            endDurakBout(false);
+        }
+    </script>
+</body>
+</html>
